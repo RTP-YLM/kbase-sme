@@ -1,0 +1,57 @@
+# RAG Side Project - Configuration
+
+llm:
+  # Provider options: openai, anthropic, ollama, alibaba
+  provider: alibaba
+  
+  # Model name (depends on provider)
+  model: qwen3.5-flash
+  
+  # API settings
+  api_key: ${ALIBABA_API_KEY}
+  base_url: https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+  
+  # Generation parameters
+  temperature: 0.7
+  max_tokens: 1024
+  top_p: 0.9
+
+rag:
+  # Vector store options: chroma, supabase
+  vector_store: supabase
+  
+  # Chroma settings (if using chroma)
+  persist_directory: ./data/vectorstore
+  
+  # Supabase settings (if using supabase)
+  supabase_url: ${SUPABASE_URL}  # Set via env var
+  supabase_key: ${SUPABASE_KEY}  # Set via env var
+  supabase_table: documents
+  
+  # Embedding model
+  embedding_model: paraphrase-multilingual-MiniLM-L12-v2  # Better for Thai
+  
+  # Chunking settings
+  chunk_size: 512
+  chunk_overlap: 50
+  
+  # Retrieval settings
+  top_k: 3
+  similarity_threshold: 0.3  # Lowered for Thai embeddings
+
+app:
+  name: RAG Knowledge Base
+  host: 0.0.0.0
+  port: 8000
+  debug: true
+  
+  # Supported file types
+  allowed_extensions:
+    - .pdf
+    - .txt
+    - .md
+    - .docx
+
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

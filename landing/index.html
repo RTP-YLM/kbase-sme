@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KBase.SME — คู่มือบริษัทอัจฉริยะ ถาม-ตอบนโยบายและ SOP ขององค์กรได้ทันทีใน 1 วินาที</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue-50: #eff6ff; --blue-100: #dbeafe; --blue-200: #bfdbfe;
+    --blue-400: #60a5fa; --blue-500: #3b82f6; --blue-600: #2563eb;
+    --blue-700: #1d4ed8; --blue-900: #1e3a8a;
+    --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1; --slate-400: #94a3b8; --slate-500: #64748b;
+    --slate-600: #475569; --slate-700: #334155; --slate-800: #1e293b;
+    --slate-900: #0f172a; --slate-950: #020617;
+    --white: #ffffff;
+    --font-th: 'Noto Sans Thai', 'Inter', -apple-system, sans-serif;
+    --font-en: 'Inter', 'Noto Sans Thai', sans-serif;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+    --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04);
+    --radius: 12px; --radius-lg: 16px; --radius-xl: 20px; --radius-2xl: 24px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--font-th); color: var(--slate-800); background: var(--white); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+  .fade-up { opacity: 0; transform: translateY(24px); transition: opacity 0.6s cubic-bezier(.22,1,.36,1), transform 0.6s cubic-bezier(.22,1,.36,1); }
+  .fade-up.visible { opacity: 1; transform: translateY(0); }
+  .delay-1 { transition-delay: .1s; } .delay-2 { transition-delay: .2s; } .delay-3 { transition-delay: .3s; }
+
+  /* ── Nav ── */
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; transition: background .3s, box-shadow .3s, backdrop-filter .3s; }
+  nav.scrolled { background: rgba(255,255,255,0.88); backdrop-filter: blur(16px) saturate(180%); border-bottom: 1px solid var(--slate-200); box-shadow: var(--shadow-sm); }
+  nav .logo { font-family: var(--font-en); font-weight: 800; font-size: 22px; color: var(--blue-600); letter-spacing: -0.5px; text-decoration: none; }
+  nav .logo span { color: var(--blue-400); }
+  .nav-links { display: flex; align-items: center; gap: 8px; }
+  .nav-links a { color: var(--slate-600); text-decoration: none; font-size: 14px; font-weight: 500; padding: 8px 14px; border-radius: 8px; transition: .2s; }
+  .nav-links a:hover { color: var(--slate-900); background: var(--slate-50); }
+  .nav-cta { background: var(--blue-600) !important; color: var(--white) !important; font-weight: 600 !important; }
+  .nav-cta:hover { background: var(--blue-700) !important; }
+
+  /* ── Buttons ── */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--font-th); font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: all .2s cubic-bezier(.22,1,.36,1); border-radius: var(--radius); }
+  .btn-primary { background: var(--blue-600); color: var(--white); padding: 14px 28px; font-size: 15px; box-shadow: 0 2px 8px rgba(37,99,235,0.25); }
+  .btn-primary:hover { background: var(--blue-700); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(37,99,235,0.3); }
+  .btn-outline { background: var(--white); color: var(--blue-600); padding: 14px 28px; font-size: 15px; border: 1.5px solid var(--blue-200); }
+  .btn-outline:hover { border-color: var(--blue-400); background: var(--blue-50); transform: translateY(-1px); }
+  .btn-lg { padding: 16px 36px; font-size: 16px; border-radius: var(--radius-lg); }
+  .btn-sm { padding: 10px 20px; font-size: 14px; }
+
+  /* ── Section shared ── */
+  section { padding: 96px 24px; }
+  .container { max-width: 1120px; margin: 0 auto; }
+  .section-header { text-align: center; margin-bottom: 56px; max-width: 720px; margin-left: auto; margin-right: auto; }
+  .section-header .overline { display: inline-block; font-family: var(--font-en); font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue-600); margin-bottom: 12px; }
+  .section-header h2 { font-size: clamp(26px, 3.5vw, 36px); font-weight: 800; color: var(--slate-900); line-height: 1.3; }
+  .section-header p { margin-top: 12px; color: var(--slate-600); font-size: 16px; line-height: 1.7; }
+
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  @media (max-width: 768px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } .nav-links { display: none; } }
+
+  /* ═══════════════════════════════════════════
+     HERO
+  ═══════════════════════════════════════════ */
+  .hero { min-height: 100vh; display: flex; align-items: center; padding: 120px 24px 80px; background: linear-gradient(180deg, var(--blue-50) 0%, var(--white) 100%); position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; top: -200px; right: -200px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%); border-radius: 50%; }
+  .hero::after { content: ''; position: absolute; bottom: -100px; left: -150px; width: 400px; height: 400px; background: radial-gradient(circle, rgba(37,99,235,0.06) 0%, transparent 70%); border-radius: 50%; }
+  .hero .container { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 48px; align-items: center; position: relative; z-index: 1; }
+  @media (max-width: 900px) { .hero .container { grid-template-columns: 1fr; text-align: center; } }
+  .hero .badge { display: inline-flex; align-items: center; gap: 6px; background: var(--white); border: 1px solid var(--blue-200); color: var(--blue-600); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 20px; box-shadow: var(--shadow-sm); }
+  .hero .badge svg { width: 14px; height: 14px; }
+  .hero h1 { font-size: clamp(32px, 4.5vw, 48px); font-weight: 800; line-height: 1.25; color: var(--slate-900); }
+  .hero h1 span { background: linear-gradient(135deg, var(--blue-600), var(--blue-400)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .sub { margin-top: 18px; font-size: 17px; color: var(--slate-600); line-height: 1.75; max-width: 560px; }
+  @media (max-width: 900px) { .hero .sub { margin-left: auto; margin-right: auto; } }
+  .hero .btns { margin-top: 32px; display: flex; gap: 12px; flex-wrap: wrap; }
+  @media (max-width: 900px) { .hero .btns { justify-content: center; } }
+
+  /* Hero mock chat */
+  .hero-visual { display: flex; justify-content: center; width: 100%; }
+  .mock-chat { background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-2xl); box-shadow: var(--shadow-xl); width: 100%; max-width: 420px; overflow: hidden; }
+  .mock-chat-header { background: linear-gradient(135deg, var(--blue-700), var(--blue-500)); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; }
+  .mock-chat-header-left { display: flex; align-items: center; gap: 12px; }
+  .mock-chat-avatar { width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .mock-chat-header .info { color: var(--white); }
+  .mock-chat-header .info .name { font-weight: 700; font-size: 14px; }
+  .mock-chat-header .info .status { font-size: 11px; opacity: 0.9; display: flex; align-items: center; gap: 4px; }
+  .mock-chat-header .info .status span { width: 6px; height: 6px; background: #3ecf8e; border-radius: 50%; display: inline-block; }
+  .mock-chat-badge { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: var(--white); font-size: 11px; padding: 3px 8px; border-radius: 12px; font-family: var(--font-en); font-weight: 500; }
+  .mock-chat-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; background: var(--slate-50); min-height: 340px; max-height: 420px; overflow-y: auto; }
+  .msg { max-width: 88%; padding: 12px 16px; border-radius: 14px; font-size: 13.5px; line-height: 1.55; }
+  .msg-bot { background: var(--white); border: 1px solid var(--slate-200); align-self: flex-start; border-bottom-left-radius: 4px; color: var(--slate-800); box-shadow: var(--shadow-sm); }
+  .msg-user { background: var(--blue-600); color: var(--white); align-self: flex-end; border-bottom-right-radius: 4px; }
+  .msg-citation { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--slate-200); font-size: 11px; color: var(--slate-500); display: flex; flex-direction: column; gap: 2px; }
+  .msg-citation .source-tag { font-weight: 600; color: var(--blue-600); }
+  .msg-citation .sim-tag { display: inline-flex; align-items: center; gap: 4px; font-weight: 500; color: #10b981; }
+  .msg.typing { display: flex; gap: 4px; padding: 14px 18px; width: fit-content; }
+  .msg.typing span { width: 7px; height: 7px; background: var(--slate-400); border-radius: 50%; animation: pulse 1.4s infinite ease-in-out; }
+  .msg.typing span:nth-child(2) { animation-delay: .2s; }
+  .msg.typing span:nth-child(3) { animation-delay: .4s; }
+  @keyframes pulse { 0%,80%,100% { opacity: .3; transform: scale(.8); } 40% { opacity: 1; transform: scale(1); } }
+
+  /* ═══════════════════════════════════════════
+     SOCIAL PROOF
+  ═══════════════════════════════════════════ */
+  .logos { padding: 48px 24px; border-top: 1px solid var(--slate-100); border-bottom: 1px solid var(--slate-100); background: var(--white); }
+  .logos .container { text-align: center; }
+  .logos p { font-size: 13px; color: var(--slate-400); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 24px; }
+  .logos-row { display: flex; justify-content: center; align-items: center; gap: 40px; flex-wrap: wrap; opacity: 0.55; }
+  .logos-row .fake-logo { font-family: var(--font-en); font-weight: 800; font-size: 18px; color: var(--slate-500); letter-spacing: -0.5px; }
+
+  /* ═══════════════════════════════════════════
+     RESULTS (ผลลัพธ์ที่พิสูจน์แล้ว)
+  ═══════════════════════════════════════════ */
+  .results { background: var(--slate-50); }
+  .result-metric-card { background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-xl); padding: 32px; text-align: center; box-shadow: var(--shadow-sm); }
+  .result-metric-card .num { font-size: 48px; font-weight: 900; color: var(--blue-600); line-height: 1; margin-bottom: 12px; font-family: var(--font-en); }
+  .result-metric-card h3 { font-size: 18px; font-weight: 700; color: var(--slate-900); margin-bottom: 8px; }
+  .result-metric-card p { font-size: 14px; color: var(--slate-500); line-height: 1.6; }
+
+  /* ═══════════════════════════════════════════
+     REAL USE CASES (ตัวอย่างการใช้งานจริง)
+  ═══════════════════════════════════════════ */
+  .usecases { background: var(--white); }
+  .usecase-card { background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-xl); padding: 32px; transition: all .3s; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+  .usecase-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--blue-500); }
+  .usecase-card:hover { border-color: var(--blue-300); box-shadow: var(--shadow-lg); transform: translateY(-4px); }
+  .usecase-dept { font-size: 12px; font-weight: 700; color: var(--blue-600); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; background: var(--blue-50); width: fit-content; padding: 4px 10px; border-radius: 6px; }
+  .usecase-card h3 { font-size: 19px; font-weight: 700; color: var(--slate-900); margin-bottom: 12px; }
+  .usecase-q { background: var(--slate-50); border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 13.5px; border-left: 3px solid var(--slate-300); }
+  .usecase-q .label { font-weight: 700; color: var(--slate-700); display: block; margin-bottom: 4px; }
+  .usecase-a { font-size: 14px; color: var(--slate-600); line-height: 1.6; margin-bottom: 16px; }
+  .usecase-benefit { font-size: 13.5px; font-weight: 600; color: #10b981; display: flex; align-items: center; gap: 6px; margin-top: auto; }
+
+  /* ═══════════════════════════════════════════
+     HOW IT WORKS (ขั้นตอนง่ายๆ)
+  ═══════════════════════════════════════════ */
+  .how { background: var(--slate-50); }
+  .steps { display: flex; gap: 32px; position: relative; }
+  .steps::before { content: ''; position: absolute; top: 32px; left: 60px; right: 60px; height: 2px; background: linear-gradient(90deg, var(--blue-200), var(--blue-400), var(--blue-200)); }
+  @media (max-width: 768px) { .steps { flex-direction: column; } .steps::before { display: none; } }
+  .step { flex: 1; text-align: center; position: relative; }
+  .step-num { width: 64px; height: 64px; border-radius: 50%; background: var(--white); border: 2px solid var(--blue-200); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-family: var(--font-en); font-weight: 800; font-size: 22px; color: var(--blue-600); position: relative; z-index: 1; box-shadow: var(--shadow-md); }
+  .step h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; color: var(--slate-900); }
+  .step p { font-size: 14px; color: var(--slate-500); line-height: 1.6; max-width: 260px; margin: 0 auto; }
+
+  /* ═══════════════════════════════════════════
+     PRICING
+  ═══════════════════════════════════════════ */
+  .pricing { background: var(--slate-50); }
+  .price-card { background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-2xl); padding: 36px 28px; text-align: center; transition: all .3s; display: flex; flex-direction: column; justify-content: space-between; }
+  .price-card:hover { box-shadow: var(--shadow-xl); transform: translateY(-4px); }
+  .price-card.popular { border: 2px solid var(--blue-500); box-shadow: var(--shadow-xl), 0 0 0 4px rgba(59,130,246,0.06); }
+  .price-card.popular::before { content: '🔥 แนะนำสำหรับ SME'; position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--blue-600), var(--blue-500)); color: var(--white); padding: 6px 18px; border-radius: 12px; font-size: 12px; font-weight: 700; white-space: nowrap; box-shadow: var(--shadow-md); }
+  .price-card .plan-name { font-size: 15px; font-weight: 700; color: var(--slate-500); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .price-card .price { font-size: 40px; font-weight: 800; color: var(--slate-900); margin: 4px 0; font-family: var(--font-en); }
+  .price-card .price small { font-size: 14px; color: var(--slate-400); font-weight: 500; }
+  .price-card .divider { height: 1px; background: var(--slate-100); margin: 20px 0; }
+  .price-card ul { list-style: none; text-align: left; margin-bottom: 28px; }
+  .price-card ul li { padding: 8px 0; font-size: 14px; color: var(--slate-600); display: flex; align-items: flex-start; gap: 10px; }
+  .price-card ul li svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
+  .price-card .check { color: var(--blue-500); }
+  .price-card .btn { width: 100%; margin-top: auto; }
+
+  /* ═══════════════════════════════════════════
+     CTA
+  ═══════════════════════════════════════════ */
+  .cta-section { background: linear-gradient(135deg, var(--blue-700), var(--blue-500)); color: var(--white); text-align: center; position: relative; overflow: hidden; }
+  .cta-section::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
+  .cta-section .container { position: relative; z-index: 1; }
+  .cta-section h2 { font-size: clamp(26px, 3.5vw, 36px); font-weight: 800; margin-bottom: 12px; }
+  .cta-section p { color: rgba(255,255,255,0.8); font-size: 16px; margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto; }
+  .btn-white { background: var(--white); color: var(--blue-600); padding: 16px 36px; font-size: 16px; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
+  .btn-white:hover { background: var(--blue-50); transform: translateY(-2px); box-shadow: var(--shadow-xl); }
+
+  /* ═══════════════════════════════════════════
+     FOOTER
+  ═══════════════════════════════════════════ */
+  footer { background: var(--slate-900); color: var(--slate-400); padding: 56px 24px 24px; }
+  .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; max-width: 1120px; margin: 0 auto; }
+  @media (max-width: 768px) { .footer-grid { grid-template-columns: 1fr; } }
+  footer .logo-ft { font-family: var(--font-en); font-weight: 800; font-size: 22px; color: var(--white); margin-bottom: 12px; }
+  footer .logo-ft span { color: var(--blue-400); }
+  footer .desc { font-size: 14px; line-height: 1.7; max-width: 300px; }
+  footer h4 { color: var(--white); font-size: 14px; font-weight: 700; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.06em; }
+  footer ul { list-style: none; }
+  footer ul li { margin-bottom: 10px; }
+  footer ul a { color: var(--slate-400); text-decoration: none; font-size: 14px; transition: .2s; }
+  footer ul a:hover { color: var(--white); }
+  .footer-bottom { max-width: 1120px; margin: 40px auto 0; padding-top: 24px; border-top: 1px solid var(--slate-800); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav id="navbar">
+  <a href="#" class="logo">KBase<span>.SME</span></a>
+  <div class="nav-links">
+    <a href="#results">ผลลัพธ์</a>
+    <a href="#usecases">ตัวอย่างการใช้งาน</a>
+    <a href="#how">วิธีการทำงาน</a>
+    <a href="#pricing">ราคาแพ็กเกจ</a>
+    <a href="#contact" class="nav-cta btn btn-sm">ขอเดโมวิเคราะห์เอกสารฟรี</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <div>
+      <div class="badge fade-up">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        SME AI Knowledge Assistant: คลังเอกสารบริษัทอัจฉริยะ
+      </div>
+      <h1 class="fade-up delay-1">พนักงานถามคำถามไหน<br><span>AI ก็หาคู่มือมาตอบให้ทันทีใน 1 วิ</span></h1>
+      <p class="sub fade-up delay-2">เลิกเสียเวลาตอบคำถามซ้ำซากในแชทกลุ่ม หรือควานหาไฟล์ใน Google Drive เพียงรวบรวมไฟล์คู่มือ (PDF, Word, โน้ต) โยนเข้าระบบ AI จะทำความเข้าใจและช่วยหาคำตอบภาษาไทยให้พนักงานทันที แม่นยำ 100% พร้อมบอกชัดเจนว่าสรุปมาจากคู่มือหน้าไหน!</p>
+      <div class="btns fade-up delay-3">
+        <a href="#pricing" class="btn btn-primary btn-lg">ดูราคาแพ็กเกจ</a>
+        <a href="#usecases" class="btn btn-outline btn-lg">ดูตัวอย่างการใช้งานจริง →</a>
+      </div>
+    </div>
+    <div class="hero-visual fade-up delay-2">
+      <div class="mock-chat">
+        <div class="mock-chat-header">
+          <div class="mock-chat-header-left">
+            <div class="mock-chat-avatar">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 15h-2v-6h2zm0-8h-2V7h2z"/></svg>
+            </div>
+            <div class="info">
+              <div class="name">KBase AI Assistant</div>
+              <div class="status"><span></span>พร้อมค้นหาคำตอบจากคู่มือบริษัท</div>
+            </div>
+          </div>
+          <span class="mock-chat-badge">Qwen 3.5</span>
+        </div>
+        <div class="mock-chat-body">
+          <div class="msg msg-user">พนักงานใหม่ลากิจได้กี่วันครับ? ต้องแจ้งล่วงหน้าไหม?</div>
+          <div class="msg msg-bot">
+            ตามคู่มือบริษัท พนักงานมีสิทธิ์<strong>ลากิจได้ 3 วันทำงานต่อปี</strong>ครับ โดยมีเงื่อนไขดังนี้:
+            <br>• ต้องส่งใบลาล่วงหน้าอย่างน้อย 3 วันทำการ
+            <br>• หากมีกรณีเร่งด่วน ต้องแจ้งหัวหน้างานโดยตรงทันที
+            <div class="msg-citation">
+              <span>📄 อ้างอิงคู่มือ: <strong class="source-tag">01_hr_policy.md</strong> (หัวข้อนโยบายการลา)</span>
+              <span class="sim-tag">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>
+                ความแม่นยำ: 78.0%
+              </span>
+            </div>
+          </div>
+          <div class="msg msg-user">ถ้าลูกค้าขอเครดิตเทอม 60 วัน แผนกขายลดราคาสินค้าได้สูงสุดเท่าไหร่?</div>
+          <div class="msg msg-bot">
+            ตามมาตรฐาน SOP ฝ่ายขายสามารถเสนอส่วนลดและเงื่อนไขได้ดังนี้ครับ:
+            <br>• <strong>พนักงานขาย:</strong> อนุมัติส่วนลดสูงสุดได้ไม่เกิน 5% สำหรับเงื่อนไขเครดิตปกติ
+            <br>• <strong>Sales Manager:</strong> อนุมัติส่วนลดสูงสุดได้ไม่เกิน 10%
+            <br>• หากลูกค้าขอ<strong>เครดิตเทอมเกิน 30 วัน (เช่น 60 วัน)</strong> หรือขอส่วนลดเกิน 10% จะต้องทำเรื่องยื่นเสนอให้ผู้บริหาร (CEO) อนุมัติเป็นรายกรณีเท่านั้น
+            <div class="msg-citation">
+              <span>📄 อ้างอิงคู่มือ: <strong class="source-tag">03_sales_sop.md</strong> (หัวข้อนโยบายเครดิตและการให้ส่วนลด)</span>
+              <span class="sim-tag">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>
+                ความแม่นยำ: 72.5%
+              </span>
+            </div>
+          </div>
+          <div class="msg msg-bot typing"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Social Proof Logos -->
+<div class="logos">
+  <div class="container">
+    <p>สถาปัตยกรรม RAG มาตรฐานสากล เชื่อมโยงฐานข้อมูลเอกสารที่ปลอดภัยที่สุด</p>
+    <div class="logos-row">
+      <span class="fake-logo">SUPABASE PGVECTOR</span>
+      <span class="fake-logo">SECURE CLOUD STORAGE</span>
+      <span class="fake-logo">THAI-SUPPORT EMBEDDINGS</span>
+      <span class="fake-logo">LINE CHAT BOT</span>
+    </div>
+  </div>
+</div>
+
+<!-- Results -->
+<section class="results" id="results">
+  <div class="container">
+    <div class="section-header fade-up">
+      <span class="overline">ผลลัพธ์ที่พิสูจน์แล้ว</span>
+      <h2>ติดตั้งระบบเพียงครั้งเดียว ยกระดับการทำงานของ SME ได้ทันที</h2>
+    </div>
+    <div class="grid-3">
+      <div class="result-metric-card fade-up delay-1">
+        <div class="num">-80%</div>
+        <h3>ลดเวลาตอบคำถามเดิมๆ</h3>
+        <p>หัวหน้าแผนกและเจ้าหน้าที่ HR/IT/บัญชี ไม่ต้องคอยตอบคำถามเดิมซ้ำๆ ในกลุ่มไลน์ มีเวลาโฟกัสงานสำคัญมากขึ้น</p>
+      </div>
+      <div class="result-metric-card fade-up delay-2">
+        <div class="num">1 Sec</div>
+        <h3>หาคำตอบเจอใน 1 วินาที</h3>
+        <p>พนักงานพิมพ์ถามแล้วได้คำตอบทันที ไม่ต้องเปิดหาจากเอกสารหนาๆ หลายร้อยหน้า หรือค้นไฟล์ใน Google Drive</p>
+      </div>
+      <div class="result-metric-card fade-up delay-3">
+        <div class="num">100%</div>
+        <h3>พนักงานทำงานได้มาตรฐาน</h3>
+        <p>พนักงานใหม่เข้าใจขั้นตอนปฏิบัติงานและเงื่อนไขถูกต้องตรงกัน ลดปัญหาการตอบลูกค้าผิดพลาดหรือทำตามใจตัวเอง</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Use Cases -->
+<section class="usecases" id="usecases">
+  <div class="container">
+    <div class="section-header fade-up">
+      <span class="overline">ตัวอย่างการใช้งานจริง (Use Cases)</span>
+      <h2>ช่วยตอบคำถามได้ทุกแผนกในองค์กรคุณ</h2>
+      <p>นี่คือตัวอย่างคำถามที่พนักงานสามารถพิมพ์ถาม แล้ว AI จะไปดึงคำตอบจากไฟล์นโยบายบริษัทและขั้นตอนปฏิบัติงาน (SOP) มาตอบให้</p>
+    </div>
+    <div class="grid-2">
+      <!-- Use Case 1: HR & Admin -->
+      <div class="usecase-card fade-up delay-1">
+        <div>
+          <div class="usecase-dept">แผนก HR & แอดมิน</div>
+          <h3>นโยบายการลา สวัสดิการพนักงาน</h3>
+          <div class="usecase-q">
+            <span class="label">🙋‍♂️ พนักงานใหม่พิมพ์ถาม:</span>
+            "ทำงานมา 4 เดือนแล้ว ลาป่วยได้เงินเดือนไหมครับ? แล้วต้องส่งใบรับรองแพทย์วันไหน?"
+          </div>
+          <p class="usecase-a">
+            🤖 <strong>AI ค้นคู่มือ HR แล้วตอบ:</strong> "ตามคู่มือพนักงานหน้า 12 พนักงานมีสิทธิ์ลาป่วยโดยได้รับค่าจ้างตามปกติไม่เกิน 30 วันทำงานต่อปี และหากลาป่วยติดต่อกันตั้งแต่ 3 วันทำงานขึ้นไป จะต้องยื่นใบรับรองแพทย์แผนปัจจุบันในวันแรกที่กลับมาเริ่มทำงานครับ"
+          </p>
+        </div>
+        <div class="usecase-benefit">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>
+          ลดภาระ HR ในการตอบเรื่องสวัสดิการซ้ำๆ ได้ 90%
+        </div>
+      </div>
+
+      <!-- Use Case 2: Sales -->
+      <div class="usecase-card fade-up delay-2">
+        <div>
+          <div class="usecase-dept">แผนกขาย (Sales)</div>
+          <h3>เงื่อนไขการรับประกันและการเสนอราคาสินค้า</h3>
+          <div class="usecase-q">
+            <span class="label">🙋‍♀️ เซลส์หน้างานพิมพ์ถาม:</span>
+            "ลูกค้าขอคืนสินค้าภายใน 7 วันเนื่องจากไม่พอใจ ต้องทำอย่างไรบ้าง?"
+          </div>
+          <p class="usecase-a">
+            🤖 <strong>AI ค้นคู่มือฝ่ายขายแล้วตอบ:</strong> "ตาม SOP นโยบายคืนสินค้าของแผนกขาย (หน้า 4) ระบุว่า บริษัทรับคืนสินค้าภายใน 7 วันนับจากวันที่ซื้อ โดยกล่องและอุปกรณ์จะต้องอยู่ในสภาพสมบูรณ์ 100% และพนักงานขายจะต้องทำใบคำขอส่งคืนสินค้าพร้อมส่งรูปถ่ายสินค้าให้หัวหน้าแผนกเซ็นอนุมัติก่อนเท่านั้นครับ"
+          </p>
+        </div>
+        <div class="usecase-benefit">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>
+          เซลส์ตัดสินใจหน้างานได้ไว ปิดดีลได้ทันที ไม่เสียโอกาสขาย
+        </div>
+      </div>
+
+      <!-- Use Case 3: Customer Service -->
+      <div class="usecase-card fade-up delay-1">
+        <div>
+          <div class="usecase-dept">แผนกบริการลูกค้า (Customer Support)</div>
+          <h3>ขั้นตอนการแก้ปัญหาและรับเรื่องจากลูกค้า (SOP)</h3>
+          <div class="usecase-q">
+            <span class="label">🙋‍♂️ แอดมินบริการลูกค้าพิมพ์ถาม:</span>
+            "ลูกค้าแจ้งว่าแอปใช้งานไม่ได้ และเป็นระบบล่มระดับร้ายแรง (P1) ต้องทำตามขั้นตอนใด?"
+          </div>
+          <p class="usecase-a">
+            🤖 <strong>AI ค้นคู่มือซัพพอร์ตแล้วตอบ:</strong> "ตามคู่มือการแก้ปัญหาของ CS แผนผังขั้นตอนระดับ P1 ระบุให้: 1. บันทึกเคสลงในระบบทันที 2. แจ้งหัวหน้าฝ่ายเทคนิคภายใน 10 นาที 3. แจ้งอัปเดตสถานะให้ลูกค้าทราบทุกๆ 30 นาที จนกว่าระบบจะกู้คืนสำเร็จครับ"
+          </p>
+        </div>
+        <div class="usecase-benefit">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>
+          แอดมินแก้ไขปัญหาได้รวดเร็ว ถูกต้องตาม SLA ของแบรนด์
+        </div>
+      </div>
+
+      <!-- Use Case 4: Finance & Procurement -->
+      <div class="usecase-card fade-up delay-2">
+        <div>
+          <div class="usecase-dept">แผนกบัญชี & คลังสินค้า</div>
+          <h3>การเบิกค่าใช้จ่ายและขั้นตอนการรับส่งสินค้า</h3>
+          <div class="usecase-q">
+            <span class="label">🙋‍♀️ พนักงานพิมพ์ถาม:</span>
+            "จะขอเบิกค่าเดินทางไปพบลูกค้าต่างจังหวัด ต้องยื่นเอกสารภายในวันไหนของเดือน?"
+          </div>
+          <p class="usecase-a">
+            🤖 <strong>AI ค้นนโยบายบัญชีแล้วตอบ:</strong> "ตามนโยบายเบิกจ่ายข้อที่ 4 พนักงานจะต้องรวบรวมใบเสร็จและยื่นแบบฟอร์มขอเบิกจ่ายภายในวันที่ 25 ของทุกเดือน หากยื่นเกินกำหนด เอกสารจะถูกนำไปตั้งเบิกและจ่ายรวมในรอบเงินเดือนของรอบถัดไปแทนครับ"
+          </p>
+        </div>
+        <div class="usecase-benefit">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>
+          พนักงานทำเอกสารเคลมเงินเบิกถูกต้อง แผนกบัญชีทำงานสบายขึ้น
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works (ขั้นตอนง่ายๆ) -->
+<section class="how" id="how">
+  <div class="container">
+    <div class="section-header fade-up">
+      <span class="overline">วิธีเริ่มใช้งานที่แสนง่าย</span>
+      <h2>ติดตั้งคลังข้อมูลของคุณเสร็จไวใน 3 ขั้นตอน</h2>
+    </div>
+    <div class="steps">
+      <div class="step fade-up delay-1">
+        <div class="step-num">1</div>
+        <h3>รวบรวมเอกสาร</h3>
+        <p>คุณแค่นำไฟล์คู่มือเดิมที่มี (ไม่ว่าจะเป็นไฟล์ PDF, Word, Markdown หรือ TXT) ใส่ลงในโฟลเดอร์ที่เราเตรียมไว้ให้</p>
+      </div>
+      <div class="step fade-up delay-2">
+        <div class="step-num">2</div>
+        <h3>AI จัดหมวดหมู่</h3>
+        <p>ระบบ AI อัจฉริยะจะนำข้อมูลไปหั่นย่อย ทำดัชนี และเก็บอย่างปลอดภัยลงในเวกเตอร์ดาต้าเบส Supabase แยกตามแผนก</p>
+      </div>
+      <div class="step fade-up delay-3">
+        <div class="step-num">3</div>
+        <h3>พนักงานเริ่มคุยได้เลย</h3>
+        <p>ใช้งานผ่านหน้าเว็บส่วนตัวของบริษัท หรือพิมพ์คุยกับบอทผ่าน LINE OA พิมพ์คำถามภาษาไทยแล้วรอคำตอบได้ทันที</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="section-header fade-up">
+      <span class="overline">ราคาแพ็กเกจ</span>
+      <h2>เลือกขนาดที่ตอบโจทย์ขนาดธุรกิจของคุณ</h2>
+      <p>ติดตั้งพร้อมเริ่มระบบภายใน 1 วัน — คุ้มค่าและปลอดภัยด้วยฐานข้อมูลส่วนตัวของแบรนด์คุณเอง</p>
+    </div>
+    <div class="grid-3">
+      <!-- Starter -->
+      <div class="price-card fade-up delay-1">
+        <div>
+          <div class="plan-name">Starter</div>
+          <div class="price">4,900<small> ฿/เดือน</small></div>
+          <div class="divider"></div>
+          <ul>
+            <li><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>เชื่อมต่อ 1 คลังข้อมูลหลัก</li>
+            <li><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>พนักงานเข้าใช้สูงสุด 10 คน</li>
+            <li><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>รองรับเอกสารไม่เกิน 200 หน้า</li>
+            <li><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>ระบบค้นหาแบบ Web Chat สำเร็จรูป</li>
+            <li><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>ระบบอ้างอิงแหล่งที่มาลดความมโน</li>
+          </ul>
+        </div>
+        <a href="#contact" class="btn btn-outline">เริ่มแพ็กเกจ Starter</a>
+      </div>
+      <!-- Growth -->
+      <div class="price-card popular fade-up delay-2">
+        <div>
+          <div class="plan-name">Growth</div>
+          <div class="price">14,900<small> ฿/เดือน</small></div>
+          <div class="divider"></div>
+          <ul>
+            <li><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>แยกสารบัญข้อมูลรายแผนก (Catalog)</li>
+            <li><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>พนักงานเข้าใช้สูงสุด 50 คน</li>
+            <li><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>รองรับเอกสารสูงสุด 2,000 หน้า</li>
+            <li><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg><strong>เชื่อมต่อ LINE OA</strong> (ทักถามผ่านไลน์ได้)</li>
+            <li><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>ระบบกรองแผนก & ระบบจัดเก็บคำถาม</li>
+          </ul>
+        </div>
+        <a href="#contact" class="btn btn-primary">เริ่มแพ็กเกจ Growth</a>
+      </div>
+      <!-- Business -->
+      <div class="price-card fade-up delay-3">
+        <div>
+          <div class="plan-name">Enterprise</div>
+          <div class="price">39,900<small> ฿/เดือน</small></div>
+          <div class="divider"></div>
+          <ul>
+            <li><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>เชื่อมต่อระบบภายในบริษัท + API แบบยืดหยุ่น</li>
+            <li><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>พนักงานเข้าใช้สูงสุด 200 คน</li>
+            <li><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>ไม่จำกัดหน้าเอกสาร</li>
+            <li><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg><strong>On-premise / Private Cloud</strong> (ปลอดภัยสูงสุด)</li>
+            <li><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>กำหนดระดับสิทธิ์เข้าถึงตามแผนกอย่างละเอียด</li>
+            <li><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>การซัพพอร์ตและปรึกษาแบบ 24/7 VIP SLA</li>
+          </ul>
+        </div>
+        <a href="#contact" class="btn btn-outline">ติดต่อคุยแพ็กเกจ Enterprise</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="contact">
+  <div class="container fade-up">
+    <h2>ลดคำถามซ้ำซาก ให้ทีมทำงานอย่างมีมาตรฐานวันนี้</h2>
+    <p>ทีมวิศวกรผู้เชี่ยวชาญของเราจะคอยซัพพอร์ตในการช่วยเหลือดูแล จัดระเบียบสารบัญเอกสาร และขึ้นระบบพร้อมลิงก์กับ LINE OA หรือหน้าเว็บบริษัทให้เสร็จสิ้นภายใน 1 วันทำการ</p>
+    <a href="mailto:hello@kbase.sme" class="btn btn-white btn-lg">📩 จองคิวนัดเดโม่เพื่อวิเคราะห์เอกสารของบริษัทฟรี</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="logo-ft">KBase<span>.SME</span></div>
+      <p class="desc">ระบบ AI Internal Knowledge Base คลังเอกสารตอบคำถามอัจฉริยะภาษาไทยสำหรับธุรกิจ SME ช่วยจัดระเบียบองค์ความรู้บริษัทไม่ให้สูญหาย และลดเวลาตอบคำถามพนักงานลง 80%</p>
+    </div>
+    <div>
+      <h4>คลัง Use Cases</h4>
+      <ul>
+        <li><a href="#usecases">ถามนโยบายสวัสดิการ HR</a></li>
+        <li><a href="#usecases">ถามราคาขายและ SOP ส่วนลด</a></li>
+        <li><a href="#usecases">คู่มือการแก้ปัญหาลูกค้าของ CS</a></li>
+        <li><a href="#usecases">ระเบียบเบิกจ่ายและส่งคลังสินค้า</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>บริการพิเศษ</h4>
+      <ul>
+        <li><a href="#contact">นัดหมายขอเดโมทดสอบระบบ</a></li>
+        <li><a href="#">บริการคลีนข้อมูลเตรียมทำ RAG</a></li>
+        <li><a href="#">บริการเชื่อมต่อ LINE OA แชทบอท</a></li>
+        <li><a href="#pricing">ตารางราคาแพ็กเกจทั้งหมด</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>ความปลอดภัยของ SME</h4>
+      <ul>
+        <li><a href="#">สิทธิ์เข้าถึงข้อมูล Row Level Security</a></li>
+        <li><a href="#">ระบบคลังส่วนตัว (Private Deployment)</a></li>
+        <li><a href="#">การป้องกันความปลอดภัยคลังข้อมูลบริษัท</a></li>
+        <li><a href="#">เอกสารและพาร์ทเนอร์สากล</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 KBase.SME Co., Ltd. — สงวนลิขสิทธิ์</span>
+    <span>พัฒนาขึ้นด้วยเวกเตอร์ดาต้าเบสชั้นนำเพื่อ SME ไทย 🇹🇭</span>
+  </div>
+</footer>
+
+<!-- Scroll animation script -->
+<script>
+  const nav = document.getElementById('navbar');
+  window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 20));
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>

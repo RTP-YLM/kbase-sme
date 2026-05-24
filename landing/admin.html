@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KBase.SME — Enterprise Admin Portal</title>
+<!-- Google Fonts & Tailwind CSS -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', 'Noto Sans Thai', 'sans-serif'],
+          mono: ['Source Code Pro', 'monospace'],
+        },
+        colors: {
+          brand: {
+            DEFAULT: '#3ecf8e', // Supabase Green
+            hover: '#00c573',
+            dark: '#10b981',
+          },
+          dark: {
+            bg: '#0f0f0f',
+            canvas: '#171717',
+            border: '#242424',
+            borderLight: '#2e2e2e',
+            prominent: '#363636',
+          }
+        }
+      }
+    }
+  }
+</script>
+<style>
+  /* Base custom dark style matching Supabase theme exactly */
+  body {
+    background-color: #0f0f0f;
+    color: #fafafa;
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0f0f0f;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #2e2e2e;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #363636;
+  }
+  .glass-panel {
+    background: rgba(23, 23, 23, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid #2e2e2e;
+  }
+  .tab-active {
+    color: #3ecf8e;
+    border-bottom: 2px solid #3ecf8e;
+  }
+</style>
+</head>
+<body class="font-sans antialiased text-slate-200">
+
+<!-- Top Navigation -->
+<header class="sticky top-0 z-50 flex items-center justify-between h-16 px-6 bg-dark-bg/80 backdrop-blur-md border-b border-dark-border">
+  <div class="flex items-center gap-6">
+    <a href="#" class="flex items-center gap-2 text-xl font-bold tracking-tight text-white">
+      <span class="text-brand">KBase</span><span class="text-slate-400 font-normal">.SME</span>
+    </a>
+    <span class="px-2.5 py-1 text-xs font-semibold bg-emerald-950/60 text-brand border border-emerald-800/60 rounded-full">
+      Enterprise Portal
+    </span>
+  </div>
+  
+  <div class="flex items-center gap-4">
+    <!-- Active Project Stats -->
+    <div class="hidden md:flex items-center gap-6 text-sm text-slate-400 border-r border-dark-border pr-6">
+      <div class="flex items-center gap-2">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-brand"></span>
+        </span>
+        <span class="text-white">Active Node:</span>
+        <span class="font-mono text-xs text-slate-300">supabase-pgvector-01</span>
+      </div>
+      <div>
+        <span class="text-slate-500">Tenant:</span>
+        <span class="text-slate-300 font-semibold">ThaiSME-Manufacturing</span>
+      </div>
+    </div>
+    
+    <!-- Profile & Notifications -->
+    <div class="flex items-center gap-3">
+      <button class="relative p-1.5 text-slate-400 hover:text-white rounded-md hover:bg-dark-border transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full"></span>
+      </button>
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-full bg-emerald-800 flex items-center justify-center font-bold text-sm text-brand border border-emerald-600">
+          D
+        </div>
+        <div class="hidden sm:block text-left">
+          <div class="text-xs font-semibold text-white leading-none">เดียร์ (Dear)</div>
+          <div class="text-[10px] text-slate-500 mt-0.5">System Admin</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="flex min-h-[calc(100vh-64px)]">
+  <!-- Sidebar -->
+  <aside class="w-64 bg-dark-bg border-r border-dark-border hidden lg:block p-4 flex flex-col justify-between">
+    <div class="space-y-6">
+      <!-- Main Navigation -->
+      <div>
+        <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Management</div>
+        <nav class="space-y-1">
+          <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-white bg-dark-border border-l-2 border-brand text-left">
+            <svg class="w-4 h-4 text-brand" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"/></svg>
+            System Overview
+          </button>
+          <button onclick="switchTab('catalog')" id="nav-catalog" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-slate-400 hover:text-white hover:bg-dark-border border-l-2 border-transparent text-left transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            Document Catalog
+            <span class="ml-auto bg-dark-border text-slate-300 text-[10px] font-mono px-1.5 py-0.5 rounded border border-dark-borderLight">10k+</span>
+          </button>
+          <button onclick="switchTab('ingestion')" id="nav-ingestion" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-slate-400 hover:text-white hover:bg-dark-border border-l-2 border-transparent text-left transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.2M7 9a1 1 0 11-2 0 1 1 0 012 0zm10 4a1 1 0 11-2 0 1 1 0 012 0z"/></svg>
+            Pipeline & Logs
+            <span class="ml-auto w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+          </button>
+        </nav>
+      </div>
+
+      <div>
+        <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Security & Settings</div>
+        <nav class="space-y-1">
+          <button onclick="switchTab('security')" id="nav-security" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-slate-400 hover:text-white hover:bg-dark-border border-l-2 border-transparent text-left transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            Access Control (RLS)
+          </button>
+          <button onclick="switchTab('rag-config')" id="nav-rag-config" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-slate-400 hover:text-white hover:bg-dark-border border-l-2 border-transparent text-left transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+            RAG Optimization
+          </button>
+        </nav>
+      </div>
+    </div>
+    
+    <!-- System Resources -->
+    <div class="p-3 bg-dark-canvas/50 border border-dark-border rounded-xl space-y-3">
+      <div class="text-xs font-semibold text-slate-400">Resource Monitor</div>
+      <div class="space-y-1.5">
+        <div class="flex justify-between text-[10px]">
+          <span>GPU Memory</span>
+          <span class="font-mono text-slate-300">4.2 / 8.0 GB</span>
+        </div>
+        <div class="w-full bg-dark-border h-1.5 rounded-full overflow-hidden">
+          <div class="bg-brand h-full rounded-full" style="width: 52.5%"></div>
+        </div>
+      </div>
+      <div class="space-y-1.5">
+        <div class="flex justify-between text-[10px]">
+          <span>Vector Index (pgvector)</span>
+          <span class="font-mono text-slate-300">114,320 Chunks</span>
+        </div>
+        <div class="w-full bg-dark-border h-1.5 rounded-full overflow-hidden">
+          <div class="bg-indigo-500 h-full rounded-full" style="width: 76.2%"></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 bg-dark-bg p-6 lg:p-8 overflow-y-auto">
+    
+    <!-- ==================== DASHBOARD TAB ==================== -->
+    <div id="tab-dashboard" class="space-y-8">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-dark-border pb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-white tracking-tight">System Overview</h1>
+          <p class="text-slate-400 text-sm mt-1">ภาพรวมและประสิทธิภาพการทำ RAG บนเวกเตอร์ดาต้าเบส Supabase (pgvector)</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button class="px-4 py-2 bg-dark-border border border-dark-borderLight text-slate-200 text-sm font-medium rounded-lg hover:bg-dark-prominent transition">
+            Export Logs
+          </button>
+          <button onclick="triggerFullIngest()" class="px-4 py-2 bg-brand text-dark-bg text-sm font-semibold rounded-lg hover:bg-brand-hover transition flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Sync All 10k Docs
+          </button>
+        </div>
+      </div>
+
+      <!-- Live metrics -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="p-5 bg-dark-canvas border border-dark-border rounded-xl">
+          <div class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Cataloged Files</div>
+          <div class="text-3xl font-bold text-white font-mono mt-2">10,432</div>
+          <div class="text-[11px] text-brand flex items-center gap-1 mt-1.5 font-medium">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+            +120 files (today)
+          </div>
+        </div>
+        <div class="p-5 bg-dark-canvas border border-dark-border rounded-xl">
+          <div class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total DB Chunk Rows</div>
+          <div class="text-3xl font-bold text-indigo-400 font-mono mt-2">114,320</div>
+          <div class="text-[11px] text-slate-500 mt-1.5">Average 11 chunks / file</div>
+        </div>
+        <div class="p-5 bg-dark-canvas border border-dark-border rounded-xl">
+          <div class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Avg Vector Search Latency</div>
+          <div class="text-3xl font-bold text-emerald-400 font-mono mt-2">14.2 ms</div>
+          <div class="text-[11px] text-brand flex items-center gap-1 mt-1.5 font-medium">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+            -4.1ms (HNSW index active)
+          </div>
+        </div>
+        <div class="p-5 bg-dark-canvas border border-dark-border rounded-xl">
+          <div class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Failed Index Jobs</div>
+          <div class="text-3xl font-bold text-rose-500 font-mono mt-2">3</div>
+          <div class="text-[11px] text-rose-500 flex items-center gap-1 mt-1.5 font-medium">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            3 files need recheck
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Use Case Ingest Demo Alert -->
+      <div id="sync-banner" class="hidden p-4 bg-emerald-950/40 border border-brand/40 text-brand rounded-xl flex items-center gap-3">
+        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        <span class="text-sm font-medium">ระบบกำลังจำลองการสแกนและ Ingest ไฟล์ 10,000 รายการ ตรวจสอบความถูกต้องของค่า Checksum และบันทึกพิกัดลง Supabase...</span>
+      </div>
+
+      <!-- Split Layout -->
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <!-- Main Performance Chart -->
+        <div class="xl:col-span-2 p-6 bg-dark-canvas border border-dark-border rounded-xl space-y-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="text-md font-semibold text-white">Query Volume & Latency</h3>
+              <p class="text-xs text-slate-400 mt-0.5">ประสิทธิภาพการสืบค้นย้อนหลัง 7 วัน</p>
+            </div>
+            <span class="text-[10px] font-mono text-brand border border-emerald-800 bg-emerald-950/50 px-2 py-0.5 rounded">Real-time</span>
+          </div>
+          <!-- SVG Mock Chart -->
+          <div class="relative w-full h-48 bg-dark-bg/50 rounded-lg p-2 flex items-end justify-between border border-dark-border">
+            <div class="absolute inset-x-2 bottom-8 h-[1px] bg-dark-border border-dashed"></div>
+            <div class="absolute inset-x-2 bottom-20 h-[1px] bg-dark-border border-dashed"></div>
+            
+            <div class="flex flex-col items-center flex-1 h-full justify-end group cursor-pointer">
+              <div class="bg-indigo-500/30 w-10 rounded-t-sm h-[30%] group-hover:bg-indigo-500/50 transition-all flex items-end justify-center"><span class="text-[9px] text-indigo-300 font-mono">1.2k</span></div>
+              <span class="text-[9px] text-slate-500 font-mono mt-1">Mon</span>
+            </div>
+            <div class="flex flex-col items-center flex-1 h-full justify-end group cursor-pointer">
+              <div class="bg-indigo-500/30 w-10 rounded-t-sm h-[45%] group-hover:bg-indigo-500/50 transition-all flex items-end justify-center"><span class="text-[9px] text-indigo-300 font-mono">2.1k</span></div>
+              <span class="text-[9px] text-slate-500 font-mono mt-1">Tue</span>
+            </div>
+            <div class="flex flex-col items-center flex-1 h-full justify-end group cursor-pointer">
+              <div class="bg-indigo-500/30 w-10 rounded-t-sm h-[65%] group-hover:bg-indigo-500/50 transition-all flex items-end justify-center"><span class="text-[9px] text-indigo-300 font-mono">3.4k</span></div>
+              <span class="text-[9px] text-slate-500 font-mono mt-1">Wed</span>
+            </div>
+            <div class="flex flex-col items-center flex-1 h-full justify-end group cursor-pointer">
+              <div class="bg-indigo-500/30 w-10 rounded-t-sm h-[50%] group-hover:bg-indigo-500/50 transition-all flex items-end justify-center"><span class="text-[9px] text-indigo-300 font-mono">2.8k</span></div>
+              <span class="text-[9px] text-slate-500 font-mono mt-1">Thu</span>
+            </div>
+            <div class="flex flex-col items-center flex-1 h-full justify-end group cursor-pointer">
+              <div class="bg-indigo-500/30 w-10 rounded-t-sm h-[80%] group-hover:bg-indigo-500/50 transition-all flex items-end justify-center"><span class="text-[9px] text-indigo-300 font-mono">4.5k</span></div>
+              <span class="text-[9px] text-slate-500 font-mono mt-1">Fri</span>
+            </div>
+            <div class="flex flex-col items-center flex-1 h-full justify-end group cursor-pointer">
+              <div class="bg-indigo-500/15 w-10 rounded-t-sm h-[15%] group-hover:bg-indigo-500/30 transition-all flex items-end justify-center"><span class="text-[9px] text-indigo-300 font-mono">500</span></div>
+              <span class="text-[9px] text-slate-500 font-mono mt-1">Sat</span>
+            </div>
+            <div class="flex flex-col items-center flex-1 h-full justify-end group cursor-pointer">
+              <div class="bg-indigo-500/15 w-10 rounded-t-sm h-[10%] group-hover:bg-indigo-500/30 transition-all flex items-end justify-center"><span class="text-[9px] text-indigo-300 font-mono">310</span></div>
+              <span class="text-[9px] text-slate-500 font-mono mt-1">Sun</span>
+            </div>
+          </div>
+          <div class="flex gap-4 text-xs text-slate-400 pt-2 border-t border-dark-border">
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-3 bg-indigo-500 rounded-sm inline-block"></span>
+              <span>Query Count</span>
+            </div>
+            <div class="flex items-center gap-1.5 ml-auto">
+              <span>99.8% Success Rate</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Department Volume breakdown -->
+        <div class="p-6 bg-dark-canvas border border-dark-border rounded-xl space-y-4">
+          <div>
+            <h3 class="text-md font-semibold text-white">Files by Department</h3>
+            <p class="text-xs text-slate-400 mt-0.5">การวางไฟล์แยกตามสารบัญแผนกหลัก</p>
+          </div>
+          <div class="space-y-3.5 pt-2">
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-medium">Human Resources (HR)</span>
+                <span class="font-mono text-slate-400">1,240 (12%)</span>
+              </div>
+              <div class="w-full bg-dark-border h-2 rounded-full overflow-hidden">
+                <div class="bg-blue-500 h-full rounded-full" style="width: 12%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-medium">Sales & Marketing (SOP)</span>
+                <span class="font-mono text-slate-400">3,450 (33%)</span>
+              </div>
+              <div class="w-full bg-dark-border h-2 rounded-full overflow-hidden">
+                <div class="bg-emerald-500 h-full rounded-full" style="width: 33%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-medium">Accounting & Finance</span>
+                <span class="font-mono text-slate-400">2,100 (20%)</span>
+              </div>
+              <div class="w-full bg-dark-border h-2 rounded-full overflow-hidden">
+                <div class="bg-purple-500 h-full rounded-full" style="width: 20%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-medium">Customer Service SOP</span>
+                <span class="font-mono text-slate-400">1,892 (18%)</span>
+              </div>
+              <div class="w-full bg-dark-border h-2 rounded-full overflow-hidden">
+                <div class="bg-amber-500 h-full rounded-full" style="width: 18%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-medium">Others (Legal, Tech, etc.)</span>
+                <span class="font-mono text-slate-400">1,750 (17%)</span>
+              </div>
+              <div class="w-full bg-dark-border h-2 rounded-full overflow-hidden">
+                <div class="bg-slate-500 h-full rounded-full" style="width: 17%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== CATALOG TAB ==================== -->
+    <div id="tab-catalog" class="hidden space-y-8 animate-fadeIn">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-dark-border pb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-white tracking-tight">Document Catalog</h1>
+          <p class="text-slate-400 text-sm mt-1">คลังสารบัญเอกสารหลัก 10,432 ไฟล์ต้นฉบับ เชื่อมโยงรหัส SHA256 เช็คเพื่อความอัปเดต</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="text" id="catalog-search" oninput="filterCatalog()" placeholder="ค้นหาชื่อไฟล์ หรือ SHA256..." class="px-3.5 py-1.5 bg-dark-canvas border border-dark-borderLight text-sm rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-brand w-64 transition">
+          <select id="catalog-dept" onchange="filterCatalog()" class="px-3 py-1.5 bg-dark-canvas border border-dark-borderLight text-sm rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-brand transition">
+            <option value="all">ทุกแผนก</option>
+            <option value="hr">Human Resources</option>
+            <option value="sales">Sales & Marketing</option>
+            <option value="finance">Accounting</option>
+            <option value="cs">Customer Service</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- File Table Wrapper -->
+      <div class="bg-dark-canvas border border-dark-border rounded-xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-300">
+            <thead class="bg-dark-bg text-slate-400 text-xs font-semibold border-b border-dark-border">
+              <tr>
+                <th class="px-6 py-4">ชื่อไฟล์คู่มือ (Source Document)</th>
+                <th class="px-6 py-4">แผนก (Catalog)</th>
+                <th class="px-6 py-4">SHA-256 Checksum</th>
+                <th class="px-6 py-4">จำนวน Chunks</th>
+                <th class="px-6 py-4">Security Level</th>
+                <th class="px-6 py-4">สถานะ</th>
+                <th class="px-6 py-4 text-right">ดำเนินการ</th>
+              </tr>
+            </thead>
+            <tbody id="catalog-table-body" class="divide-y divide-dark-border">
+              <!-- JS will fill this but here is fallback mock -->
+              <tr class="hover:bg-dark-canvas/60">
+                <td class="px-6 py-4 font-medium text-white">01_hr_policy.md</td>
+                <td class="px-6 py-4 text-xs"><span class="px-2 py-0.5 bg-blue-950/40 text-blue-400 border border-blue-900 rounded-md uppercase font-semibold">hr</span></td>
+                <td class="px-6 py-4 font-mono text-xs text-slate-500">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</td>
+                <td class="px-6 py-4 font-mono text-xs">8 Chunks</td>
+                <td class="px-6 py-4 text-xs"><span class="px-2 py-0.5 bg-slate-900 text-slate-400 border border-dark-border rounded-md">Internal</span></td>
+                <td class="px-6 py-4 text-xs"><span class="text-brand font-medium flex items-center gap-1">🟢 Active</span></td>
+                <td class="px-6 py-4 text-right space-x-2">
+                  <button class="text-xs text-slate-400 hover:text-white hover:underline">Re-index</button>
+                  <button class="text-xs text-rose-500 hover:text-rose-300 hover:underline">Delete</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Pagination controls -->
+        <div class="px-6 py-4 bg-dark-bg border-t border-dark-border flex items-center justify-between text-xs text-slate-400">
+          <div>
+            Showing 1 - 5 of 10,432 entries
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="px-2.5 py-1 bg-dark-border text-slate-300 rounded hover:bg-dark-prominent border border-dark-borderLight">Previous</button>
+            <button class="px-2.5 py-1 bg-dark-border text-slate-300 rounded hover:bg-dark-prominent border border-dark-borderLight">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== PIPELINE TAB ==================== -->
+    <div id="tab-ingestion" class="hidden space-y-8">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-dark-border pb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-white tracking-tight">Ingestion Pipeline & Logs</h1>
+          <p class="text-slate-400 text-sm mt-1">คิวการทำงาน (Pipeline Queue) และบันทึก Logs การตัดส่วน Chunks เพื่อสร้าง Vector Embedding</p>
+        </div>
+      </div>
+
+      <!-- Live Job queue -->
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <!-- Live pipeline console -->
+        <div class="xl:col-span-2 bg-[#101010] border border-dark-border rounded-xl overflow-hidden">
+          <div class="bg-dark-canvas px-4 py-3 border-b border-dark-border flex justify-between items-center">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-brand animate-ping"></span>
+              <span class="text-xs font-semibold text-slate-300">Console Logger (CLI output preview)</span>
+            </div>
+            <button onclick="clearConsole()" class="text-xs text-slate-500 hover:text-white transition">Clear Logs</button>
+          </div>
+          <div id="console-output" class="p-4 font-mono text-xs text-slate-300 h-96 overflow-y-auto space-y-2">
+            <div><span class="text-slate-500">[2026-05-24 16:40:12]</span> <span class="text-brand">INFO:</span> Initializing document loader...</div>
+            <div><span class="text-slate-500">[2026-05-24 16:40:13]</span> <span class="text-brand">INFO:</span> Connecting to Supabase at https://hziuhbcxjlqfxenbaahb.supabase.co...</div>
+            <div><span class="text-slate-500">[2026-05-24 16:40:14]</span> <span class="text-brand">INFO:</span> Active embedding model: paraphrase-multilingual-MiniLM-L12-v2 (dim: 384)</div>
+            <div><span class="text-slate-500">[2026-05-24 16:40:14]</span> <span class="text-brand">INFO:</span> Scan found 10,432 files in data/documents/</div>
+            <div><span class="text-slate-500">[2026-05-24 16:40:15]</span> <span class="text-brand">INFO:</span> Checking hashes... 10,430 files already synced. 2 files updated.</div>
+            <div><span class="text-slate-500">[2026-05-24 16:40:15]</span> <span class="text-amber-500">WARN:</span> File '05_it_security_policy.md' modified since last sync. Deleting 4 old Chunks.</div>
+            <div><span class="text-slate-500">[2026-05-24 16:40:16]</span> <span class="text-brand">INFO:</span> Chunking '05_it_security_policy.md' with size=512 overlap=50... 4 Chunks generated.</div>
+            <div><span class="text-slate-500">[2026-05-24 16:40:17]</span> <span class="text-brand">INFO:</span> Generating embeddings and inserting into Supabase knowledge_chunks table... done.</div>
+            <div><span class="text-slate-500">[2026-05-24 16:40:18]</span> <span class="text-brand">INFO:</span> Ingestion complete! 114,320 Chunks are fully vector-indexed.</div>
+          </div>
+        </div>
+
+        <!-- Ingest Config Card -->
+        <div class="p-6 bg-dark-canvas border border-dark-border rounded-xl space-y-6">
+          <h3 class="text-md font-semibold text-white">Parser & Chunking Configuration</h3>
+          
+          <div class="space-y-4">
+            <div class="space-y-2">
+              <label class="text-xs font-semibold text-slate-400">Chunk Size (ความกว้างท่อนข้อมูล)</label>
+              <input type="range" min="128" max="1024" value="512" step="64" id="range-chunk" oninput="updateRangeLabel('chunk')" class="w-full accent-brand bg-dark-border rounded-lg h-1.5 cursor-pointer">
+              <div class="flex justify-between text-xs font-mono text-slate-500">
+                <span>128 chars</span>
+                <span id="label-chunk" class="text-brand font-bold">512 chars</span>
+                <span>1024 chars</span>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs font-semibold text-slate-400">Chunk Overlap (ส่วนทับซ้อนกัน)</label>
+              <input type="range" min="10" max="200" value="50" step="10" id="range-overlap" oninput="updateRangeLabel('overlap')" class="w-full accent-brand bg-dark-border rounded-lg h-1.5 cursor-pointer">
+              <div class="flex justify-between text-xs font-mono text-slate-500">
+                <span>10 chars</span>
+                <span id="label-overlap" class="text-brand font-bold">50 chars</span>
+                <span>200 chars</span>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs font-semibold text-slate-400">PDF Loader Algorithm</label>
+              <select class="w-full px-3 py-2 bg-dark-bg border border-dark-borderLight text-sm rounded-lg text-white">
+                <option value="pypdf">PyPDF (Standard speed)</option>
+                <option value="pdfplumber">pdfplumber (Strict Table extraction)</option>
+                <option value="ocr">PyMuPDF + Tesseract OCR (Scan PDFs)</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="pt-4 border-t border-dark-border">
+            <button onclick="saveIngestConfig()" class="w-full px-4 py-2 bg-brand text-dark-bg text-sm font-semibold rounded-lg hover:bg-brand-hover transition">
+              Save & Apply Settings
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== SECURITY TAB ==================== -->
+    <div id="tab-security" class="hidden space-y-8">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-dark-border pb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-white tracking-tight">Access Control & Security (RLS)</h1>
+          <p class="text-slate-400 text-sm mt-1">กำหนดสิทธิ์เข้าใช้งานข้อมูลตามระดับความลับและแผนก ป้องกันข้อมูลความลับองค์กรรั่วไหลด้วย PostgreSQL RLS</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <!-- RLS Rules list -->
+        <div class="xl:col-span-2 bg-dark-canvas border border-dark-border rounded-xl p-6 space-y-6">
+          <div class="flex justify-between items-center">
+            <h3 class="text-md font-semibold text-white">Active Row Level Security (RLS) Policies</h3>
+            <span class="px-2 py-0.5 bg-emerald-950/60 border border-brand/40 text-brand text-[10px] rounded font-semibold">RLS ENFORCED</span>
+          </div>
+
+          <div class="space-y-4">
+            <div class="p-4 bg-dark-bg border border-dark-borderLight rounded-lg flex items-start justify-between">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-mono font-bold text-slate-300">policy_select_by_department</span>
+                  <span class="px-1.5 py-0.5 bg-blue-950/50 text-blue-400 border border-blue-900 text-[9px] font-mono rounded">SELECT</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-1.5">ผู้ใช้สามารถทำความเข้าใจหรือค้นหาเวกเตอร์ได้ เฉพาะส่วนที่ตรงกับแผนกของตนเองเท่านั้น</p>
+                <div class="font-mono text-[10px] bg-dark-canvas p-2 rounded border border-dark-border text-slate-400 mt-2">
+                  USING (department = auth.jwt() ->> 'department')
+                </div>
+              </div>
+              <span class="text-xs text-brand font-medium">Active</span>
+            </div>
+
+            <div class="p-4 bg-dark-bg border border-dark-borderLight rounded-lg flex items-start justify-between">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-mono font-bold text-slate-300">policy_restrict_management_documents</span>
+                  <span class="px-1.5 py-0.5 bg-rose-950/50 text-rose-400 border border-rose-900 text-[9px] font-mono rounded">RESTRICT</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-1.5">ปิดการค้นหาข้อมูลที่มีระดับความปลอดภัยขั้นสูงสุด (Restricted) ให้สิทธิ์เฉพาะ Role Management เท่านั้น</p>
+                <div class="font-mono text-[10px] bg-dark-canvas p-2 rounded border border-dark-border text-slate-400 mt-2">
+                  USING (access_level = 'restricted' AND auth.jwt() ->> 'role' = 'management')
+                </div>
+              </div>
+              <span class="text-xs text-brand font-medium">Active</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security Config -->
+        <div class="p-6 bg-dark-canvas border border-dark-border rounded-xl space-y-6">
+          <h3 class="text-md font-semibold text-white">Tenant Access & API Roles</h3>
+          
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-400">Enable Strict RLS Filters</span>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked class="sr-only peer">
+                <div class="w-9 h-5 bg-dark-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand"></div>
+              </label>
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-400">Mask Sensitive Answers</span>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked class="sr-only peer">
+                <div class="w-9 h-5 bg-dark-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand"></div>
+              </label>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs font-semibold text-slate-400">Default Query Fallback Behavior</label>
+              <select class="w-full px-3 py-2 bg-dark-bg border border-dark-borderLight text-sm rounded-lg text-white">
+                <option value="refuse">Refuse and say "ไม่พบสิทธิ์เข้าใช้งาน"</option>
+                <option value="public_only">Fallback to General Public Knowledge only</option>
+                <option value="request_auth">Forward auth validation card to user</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== RAG OPTIMIZATION TAB ==================== -->
+    <div id="tab-rag-config" class="hidden space-y-8">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-dark-border pb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-white tracking-tight">RAG Optimization Settings</h1>
+          <p class="text-slate-400 text-sm mt-1">ตั้งค่าความแม่นยำ ปรับ Threshold และจูน Prompt หลักเพื่อให้ได้ผลลัพธ์การถามตอบที่ฉลาดและตรงจุดที่สุด</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <!-- Left configuration -->
+        <div class="xl:col-span-2 bg-dark-canvas border border-dark-border rounded-xl p-6 space-y-6">
+          <h3 class="text-md font-semibold text-white">System Prompt & LLM Directives</h3>
+          
+          <div class="space-y-4">
+            <div class="space-y-2">
+              <div class="flex justify-between">
+                <label class="text-xs font-semibold text-slate-400">System Instruction Preset</label>
+                <span class="text-[10px] text-brand">Thai Language Optimized</span>
+              </div>
+              <textarea rows="8" class="w-full px-3 py-2.5 bg-dark-bg border border-dark-borderLight text-xs font-mono text-slate-300 rounded-lg focus:outline-none focus:border-brand">You are a helpful assistant answering questions based on the provided context.
+
+Context:
+{context}
+
+Question: {question}
+
+Instructions:
+- Answer based ONLY on the context provided.
+- If the answer is not in the context, say "I don't have enough information to answer this question"
+- Be concise, direct and polite in Thai.
+- Cite sources and filenames when possible.</textarea>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label class="text-xs font-semibold text-slate-400">Primary LLM Model Engine</label>
+                <select class="w-full px-3 py-2 bg-dark-bg border border-dark-borderLight text-sm rounded-lg text-white">
+                  <option value="qwen-3.5-flash">Qwen 3.5 Flash (SME recommended — fast)</option>
+                  <option value="qwen-3.6-plus">Qwen 3.6 Plus (Heavy reasoning)</option>
+                  <option value="gpt-4o-mini">OpenAI GPT-4o Mini (Global standard)</option>
+                  <option value="local-llama3">Llama-3-8B-Thai (Local host — 100% private)</option>
+                </select>
+              </div>
+
+              <div class="space-y-2">
+                <label class="text-xs font-semibold text-slate-400">Embedding Model</label>
+                <select class="w-full px-3 py-2 bg-dark-bg border border-dark-borderLight text-sm rounded-lg text-white">
+                  <option value="multilingual-minilm">paraphrase-multilingual-MiniLM-L12-v2 (384 dim)</option>
+                  <option value="bge-m3">BGE-M3 Multilingual (1024 dim)</option>
+                  <option value="text-embedding-3-small">OpenAI text-embedding-3-small (1536 dim)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rigth thresholdจูน -->
+        <div class="p-6 bg-dark-canvas border border-dark-border rounded-xl space-y-6">
+          <h3 class="text-md font-semibold text-white">Vector Similarity Filter</h3>
+          
+          <div class="space-y-6">
+            <div class="space-y-2">
+              <label class="text-xs font-semibold text-slate-400">Similarity Threshold (ความแม่นยำขั้นต่ำ)</label>
+              <input type="range" min="10" max="95" value="30" id="range-threshold" oninput="updateRangeLabel('threshold')" class="w-full accent-brand bg-dark-border rounded-lg h-1.5 cursor-pointer">
+              <div class="flex justify-between text-xs font-mono text-slate-500">
+                <span>0.10 (กว้างสุด)</span>
+                <span id="label-threshold" class="text-brand font-bold">0.30 (แนะนำ)</span>
+                <span>0.95 (เป๊ะสุด)</span>
+              </div>
+              <p class="text-[10px] text-slate-500 mt-2 leading-relaxed">ค่าที่สูงขึ้นจะกรองเอกสารที่ไม่ค่อยตรงทิ้ง แนะนำที่ 0.30 สำหรับ Cosine Similarity บนโมเดล multilingual</p>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs font-semibold text-slate-400">Match Document Count (Top K)</label>
+              <select class="w-full px-3 py-2 bg-dark-bg border border-dark-borderLight text-sm rounded-lg text-white">
+                <option value="3">Top 3 matching Chunks (Fastest & Cost-effective)</option>
+                <option value="5">Top 5 matching Chunks (Better coverage)</option>
+                <option value="8">Top 8 matching Chunks (Deep context)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Mock script to simulate fully interactive dashboard tabs & ingestion animations -->
+<script>
+  // Tabs management
+  const tabs = ['dashboard', 'catalog', 'ingestion', 'security', 'rag-config'];
+  
+  function switchTab(targetTab) {
+    tabs.forEach(tab => {
+      const el = document.getElementById('tab-' + tab);
+      const navEl = document.getElementById('nav-' + tab);
+      
+      if (tab === targetTab) {
+        el.classList.remove('hidden');
+        navEl.className = "w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-white bg-dark-border border-l-2 border-brand text-left";
+      } else {
+        el.classList.add('hidden');
+        navEl.className = "w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-slate-400 hover:text-white hover:bg-dark-border border-l-2 border-transparent text-left transition";
+      }
+    });
+  }
+
+  // Update Ingestion configurations sliders
+  function updateRangeLabel(type) {
+    const range = document.getElementById('range-' + type);
+    const label = document.getElementById('label-' + type);
+    
+    if (type === 'chunk') {
+      label.textContent = range.value + " chars";
+    } else if (type === 'overlap') {
+      label.textContent = range.value + " chars";
+    } else if (type === 'threshold') {
+      label.textContent = "0." + range.value + " (" + (range.value == 30 ? "แนะนำ" : "กำหนดเอง") + ")";
+    }
+  }
+
+  // Ingest config save message
+  function saveIngestConfig() {
+    alert("บันทึกการตั้งค่า Pipeline และสัดส่วน Chunk สำเร็จแล้ว! Chunks ใหม่ที่เพิ่มเข้ามาหลังจากนี้จะใช้โครงสร้างนี้โดยอัตโนมัติ");
+  }
+
+  // Clear Console Logger
+  function clearConsole() {
+    document.getElementById('console-output').innerHTML = "<div><span class='text-slate-500'>[LOGS CLEARED]</span> console ready.</div>";
+  }
+
+  // Sync / Ingest simulation
+  function triggerFullIngest() {
+    const banner = document.getElementById('sync-banner');
+    const consoleOut = document.getElementById('console-output');
+    
+    banner.classList.remove('hidden');
+    
+    // Add fake logs to the console window dynamically
+    setTimeout(() => {
+      const div1 = document.createElement('div');
+      div1.innerHTML = `<span class="text-slate-500">[${new Date().toLocaleTimeString()}]</span> <span class="text-indigo-400">SYNC:</span> Initiating full catalog ingestion...`;
+      consoleOut.appendChild(div1);
+      consoleOut.scrollTop = consoleOut.scrollHeight;
+    }, 500);
+
+    setTimeout(() => {
+      const div2 = document.createElement('div');
+      div2.innerHTML = `<span class="text-slate-500">[${new Date().toLocaleTimeString()}]</span> <span class="text-brand">INFO:</span> Checksum validation finished. 10,432 files checked. 0 duplicates detected.`;
+      consoleOut.appendChild(div2);
+      consoleOut.scrollTop = consoleOut.scrollHeight;
+    }, 1500);
+
+    setTimeout(() => {
+      const div3 = document.createElement('div');
+      div3.innerHTML = `<span class="text-slate-500">[${new Date().toLocaleTimeString()}]</span> <span class="text-brand">INFO:</span> Supabase database vector sync successful. All 114,320 Chunks are fully active!`;
+      consoleOut.appendChild(div3);
+      consoleOut.scrollTop = consoleOut.scrollHeight;
+      
+      banner.classList.add('hidden');
+      alert("การซิงค์ไฟล์ 10,000 ไฟล์สำเร็จเสร็จสิ้น! บันทึกและประเมินค่าเวกเตอร์ทั้งหมดเรียบร้อยแล้ว");
+    }, 3000);
+  }
+
+  // Document mock database for 10 files
+  const mockDocuments = [
+    { name: "01_hr_policy.md", dept: "hr", hash: "bf4c8996fb92427ae41e4649b934ca495991b7852b855", chunks: 8, level: "Internal", status: "🟢 Active" },
+    { name: "02_accounting_policy.md", dept: "finance", hash: "a7249b1542617f7a42a98b1a239a5fef2f20387a", chunks: 14, level: "Internal", status: "🟢 Active" },
+    { name: "03_sales_sop.md", dept: "sales", hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4", chunks: 11, level: "Internal", status: "🟢 Active" },
+    { name: "04_customer_service_sop.md", dept: "cs", hash: "c9d7e67b7f7a42a98b1a7249b154261da8df95c21", chunks: 19, level: "Internal", status: "🟢 Active" },
+    { name: "05_it_security_policy.md", dept: "others", hash: "fd924a187a41eb2c6cf397a612dfa9a47321e09c12", chunks: 12, level: "Restricted", status: "🟢 Active" },
+    { name: "06_operations_sop.md", dept: "others", hash: "5fa16bc1d9a24cf39a8c160bdf739a861cfda8342", chunks: 15, level: "Internal", status: "🟢 Active" },
+    { name: "07_procurement_policy.md", dept: "finance", hash: "7a41efb7038162e0c1df397a61249b1a7cfdf8c92a", chunks: 9, level: "Internal", status: "🟢 Active" },
+    { name: "08_marketing_guideline.md", dept: "sales", hash: "c18df81620a1db4c7398b1a7cfdf09c89e1a2f44c", chunks: 10, level: "Public", status: "🟢 Active" },
+    { name: "09_warehouse_policy.md", dept: "others", hash: "9e1a2fd8a7c29fb729e1a2fa7f9720bc8fa12d987a", chunks: 16, level: "Internal", status: "🟢 Active" },
+    { name: "10_legal_compliance_policy.md", dept: "others", hash: "fd981c2fa87d1ea2c6b41fa7f9d8a371cda98f219", chunks: 21, level: "Restricted", status: "🔴 Failed Ingest" }
+  ];
+
+  // Render mock documents to catalog table
+  function renderCatalog(docs) {
+    const tbody = document.getElementById('catalog-table-body');
+    tbody.innerHTML = '';
+    
+    docs.forEach(doc => {
+      const tr = document.createElement('tr');
+      tr.className = "hover:bg-dark-canvas/60";
+      
+      let deptColorClass = "bg-slate-900 text-slate-400 border-dark-border";
+      if (doc.dept === 'hr') deptColorClass = "bg-blue-950/40 text-blue-400 border-blue-900";
+      if (doc.dept === 'finance') deptColorClass = "bg-purple-950/40 text-purple-400 border-purple-900";
+      if (doc.dept === 'sales') deptColorClass = "bg-emerald-950/40 text-brand border-emerald-900";
+      if (doc.dept === 'cs') deptColorClass = "bg-amber-950/40 text-amber-400 border-amber-900";
+      
+      let secColorClass = "bg-slate-900 text-slate-400";
+      if (doc.level === 'Restricted') secColorClass = "bg-rose-950/40 text-rose-400 border border-rose-900/60";
+      if (doc.level === 'Public') secColorClass = "bg-emerald-950/40 text-brand border border-emerald-900/60";
+
+      tr.innerHTML = `
+        <td class="px-6 py-4 font-medium text-white flex items-center gap-2">
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          ${doc.name}
+        </td>
+        <td class="px-6 py-4 text-xs">
+          <span class="px-2 py-0.5 border rounded-md uppercase font-semibold ${deptColorClass}">${doc.dept}</span>
+        </td>
+        <td class="px-6 py-4 font-mono text-xs text-slate-500" title="${doc.hash}">
+          ${doc.hash.substring(0, 16)}...
+        </td>
+        <td class="px-6 py-4 font-mono text-xs">${doc.chunks} Chunks</td>
+        <td class="px-6 py-4 text-xs">
+          <span class="px-2 py-0.5 rounded-md ${secColorClass}">${doc.level}</span>
+        </td>
+        <td class="px-6 py-4 text-xs">
+          <span class="${doc.status.includes('Active') ? 'text-brand' : 'text-rose-500'} font-medium flex items-center gap-1">${doc.status}</span>
+        </td>
+        <td class="px-6 py-4 text-right space-x-2">
+          <button onclick="alert('Re-indexing ${doc.name} ...')" class="text-xs text-slate-400 hover:text-white hover:underline">Re-index</button>
+          <button onclick="alert('Delete ${doc.name} ...')" class="text-xs text-rose-500 hover:text-rose-300 hover:underline">Delete</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Filter functionality on catalog tab
+  function filterCatalog() {
+    const searchVal = document.getElementById('catalog-search').value.toLowerCase();
+    const deptVal = document.getElementById('catalog-dept').value;
+    
+    const filtered = mockDocuments.filter(doc => {
+      const matchSearch = doc.name.toLowerCase().includes(searchVal) || doc.hash.includes(searchVal);
+      const matchDept = (deptVal === 'all') || (doc.dept === deptVal);
+      return matchSearch && matchDept;
+    });
+    
+    renderCatalog(filtered);
+  }
+
+  // Initial render
+  renderCatalog(mockDocuments);
+</script>
+</body>
+</html>
