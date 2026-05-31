@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
 Ingest documents into the RAG system
-Usage: python ingest.py [directory]
+Usage: python ingest.py [directory] [--reset] [--collection COLLECTION_NAME]
 """
 import sys
+import argparse
 from pathlib import Path
 
 # Add src to path
@@ -14,7 +15,7 @@ from document_loader import DocumentLoader
 from rag_engine import RAGEngine
 
 
-def ingest(directory: str = "data/documents", collection_name: str = "documents"):
+def ingest(directory: str = "data/documents", collection_name: str = "documents", reset: bool = False):
     """Ingest all documents from directory into vector store"""
     
     print("=" * 60)
@@ -33,6 +34,16 @@ def ingest(directory: str = "data/documents", collection_name: str = "documents"
     engine = RAGEngine(config)
     engine.initialize()
     
+    # Reset collection if requested
+    if reset:
+        print(f"\nResetting collection '{collection_name}'...")
+        try:
+            engine.delete_collection(collection_name)
+            print(f"✓ Collection '{collection_name}' reset completed (deleted all existing chunks).")
+        except Exception as e:
+            print(f"Error resetting collection: {e}")
+            return 1
+            
     # Load documents
     dir_path = Path(directory)
     if not dir_path.exists():
@@ -65,5 +76,10 @@ def ingest(directory: str = "data/documents", collection_name: str = "documents"
 
 
 if __name__ == "__main__":
-    directory = sys.argv[1] if len(sys.argv) > 1 else "data/documents"
-    sys.exit(ingest(directory))
+    parser = argparse.ArgumentParser(description="Ingest documents into the RAG system")
+    parser.add_argument("directory", nargs="?", default="data/documents", help="Directory containing documents (default: data/documents)")
+    parser.add_argument("--reset", action="store_true", help="Delete all documents in the collection before ingestion")
+    parser.add_argument("--collection", default="documents", help="Name of the collection to ingest into (default: documents)")
+    
+    args = parser.parse_args()
+    sys.exit(ingest(args.directory, args.collection, args.reset))
