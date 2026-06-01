@@ -1,0 +1,166 @@
+[
+  {
+    "id": "hr-001",
+    "question": "พนักงานลากิจได้กี่วันต่อปี",
+    "expected_answer_contains": ["3 วัน", "ลากิจ"],
+    "source_doc": "01_hr_policy.md",
+    "department": "hr",
+    "should_answer": true
+  },
+  {
+    "id": "hr-002",
+    "question": "ลาป่วยเกินกี่วันต้องมีใบรับรองแพทย์",
+    "expected_answer_contains": ["2 วัน", "ใบรับรองแพทย์"],
+    "source_doc": "01_hr_policy.md",
+    "department": "hr",
+    "should_answer": true
+  },
+  {
+    "id": "hr-003",
+    "question": "ลาพักร้อนได้กี่วันต่อปี",
+    "expected_answer_contains": ["10 วัน", "ลาพักร้อน"],
+    "source_doc": "01_hr_policy.md",
+    "department": "hr",
+    "should_answer": true
+  },
+  {
+    "id": "hr-004",
+    "question": "เวลาเข้างานและเลิกงานคือกี่โมง",
+    "expected_answer_contains": ["09:00", "18:00"],
+    "source_doc": "01_hr_policy.md",
+    "department": "hr",
+    "should_answer": true
+  },
+  {
+    "id": "hr-005",
+    "question": "ระยะทดลองงานกี่วัน",
+    "expected_answer_contains": ["119 วัน"],
+    "source_doc": "01_hr_policy.md",
+    "department": "hr",
+    "should_answer": true
+  },
+  {
+    "id": "hr-006",
+    "question": "บริษัทประเมินผลงานปีละกี่ครั้งและเดือนไหน",
+    "expected_answer_contains": ["2 ครั้ง", "มิถุนายน", "ธันวาคม"],
+    "source_doc": "01_hr_policy.md",
+    "department": "hr",
+    "should_answer": true
+  },
+  {
+    "id": "acc-001",
+    "question": "ส่งใบเบิกค่าใช้จ่ายภายในกี่วัน",
+    "expected_answer_contains": ["30 วัน"],
+    "source_doc": "02_accounting_policy.md",
+    "department": "accounting",
+    "should_answer": true
+  },
+  {
+    "id": "acc-002",
+    "question": "เงินเดือนจ่ายวันที่เท่าไหร่ของเดือน",
+    "expected_answer_contains": ["28"],
+    "source_doc": "02_accounting_policy.md",
+    "department": "accounting",
+    "should_answer": true
+  },
+  {
+    "id": "acc-003",
+    "question": "วงเงินที่หัวหน้าแผนกอนุมัติได้คือเท่าไหร่",
+    "expected_answer_contains": ["5,000"],
+    "source_doc": "02_accounting_policy.md",
+    "department": "accounting",
+    "should_answer": true
+  },
+  {
+    "id": "acc-004",
+    "question": "ใครอนุมัติค่าใช้จ่ายมากกว่า 50,000 บาท",
+    "expected_answer_contains": ["กรรมการผู้จัดการ"],
+    "source_doc": "02_accounting_policy.md",
+    "department": "accounting",
+    "should_answer": true
+  },
+  {
+    "id": "acc-005",
+    "question": "ออกใบแจ้งหนี้ภายในกี่วันหลังส่งมอบงาน",
+    "expected_answer_contains": ["3 วันทำการ"],
+    "source_doc": "02_accounting_policy.md",
+    "department": "accounting",
+    "should_answer": true
+  },
+  {
+    "id": "sales-001",
+    "question": "ต้องบันทึก lead ใน CRM ภายในเมื่อไหร่",
+    "expected_answer_contains": ["วันเดียวกัน"],
+    "source_doc": "03_sales_sop.md",
+    "department": "sales",
+    "should_answer": true
+  },
+  {
+    "id": "sales-002",
+    "question": "ติดต่อลูกค้าใหม่ครั้งแรกภายในกี่ชั่วโมง",
+    "expected_answer_contains": ["24 ชั่วโมง"],
+    "source_doc": "03_sales_sop.md",
+    "department": "sales",
+    "should_answer": true
+  },
+  {
+    "id": "sales-003",
+    "question": "ใบเสนอราคามีอายุกี่วัน",
+    "expected_answer_contains": ["15 วัน"],
+    "source_doc": "03_sales_sop.md",
+    "department": "sales",
+    "should_answer": true
+  },
+  {
+    "id": "sales-004",
+    "question": "ให้ส่วนลดได้ไม่เกินเท่าไหร่โดยไม่ต้องขออนุมัติ",
+    "expected_answer_contains": ["10%"],
+    "source_doc": "03_sales_sop.md",
+    "department": "sales",
+    "should_answer": true
+  },
+  {
+    "id": "sales-005",
+    "question": "หลังส่งใบเสนอราคาต้องติดตามลูกค้าภายในกี่วัน",
+    "expected_answer_contains": ["3 วันทำการ"],
+    "source_doc": "03_sales_sop.md",
+    "department": "sales",
+    "should_answer": true
+  },
+  {
+    "id": "no-ans-001",
+    "question": "บริษัทมีสวัสดิการประกันสุขภาพแบบไหน",
+    "expected_answer_contains": [],
+    "source_doc": null,
+    "department": null,
+    "should_answer": false,
+    "note": "ไม่มีข้อมูลในเอกสาร — ต้องได้ no-answer"
+  },
+  {
+    "id": "no-ans-002",
+    "question": "ค่าล่วงเวลาคำนวณอย่างไร",
+    "expected_answer_contains": [],
+    "source_doc": null,
+    "department": null,
+    "should_answer": false,
+    "note": "ไม่มีข้อมูลในเอกสาร — ต้องได้ no-answer"
+  },
+  {
+    "id": "no-ans-003",
+    "question": "วิธีการสมัครงานทำอย่างไร",
+    "expected_answer_contains": [],
+    "source_doc": null,
+    "department": null,
+    "should_answer": false,
+    "note": "ไม่มีข้อมูลในเอกสาร — ต้องได้ no-answer"
+  },
+  {
+    "id": "cross-001",
+    "question": "ถ้าเบิกค่าใช้จ่าย 3,000 บาท ใครอนุมัติได้",
+    "expected_answer_contains": ["หัวหน้าแผนก"],
+    "source_doc": "02_accounting_policy.md",
+    "department": "accounting",
+    "should_answer": true,
+    "note": "ต้องอนุมานจากวงเงิน < 5,000 บาท"
+  }
+]

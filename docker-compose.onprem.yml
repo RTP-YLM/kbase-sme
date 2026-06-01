@@ -1,0 +1,53 @@
+# KbaseSME — On-Prem profile (E9-2)
+# ใช้แทน cloud LLM ด้วย Ollama + Typhoon 2 (GPU optional)
+# รัน: docker compose -f docker-compose.yml -f docker-compose.onprem.yml up -d
+
+services:
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: kbase-ollama
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    # GPU: uncomment deploy block ถ้ามี NVIDIA GPU
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    environment:
+      OLLAMA_KEEP_ALIVE: "24h"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - kbase-net
+
+  # API ชี้ไป Ollama แทน cloud provider
+  api:
+    environment:
+      LLM_PROVIDER: ollama
+      OLLAMA_BASE_URL: http://ollama:11434/v1
+      OLLAMA_MODEL: typhoon2
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+  worker:
+    environment:
+      LLM_PROVIDER: ollama
+      OLLAMA_BASE_URL: http://ollama:11434/v1
+      OLLAMA_MODEL: typhoon2
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+volumes:
+  ollama-data:

@@ -223,6 +223,46 @@ class SupabaseVectorStore:
 
         return [self._row_to_chunk_result(row, score_key="fts_rank") for row in (result.data or [])]
 
+    def search_hybrid(
+        self,
+        query_embedding: list[float],
+        query_text: str,
+        tenant_id: str = DEFAULT_TENANT_ID,
+        department: Optional[str] = None,
+        access_level: int = 2,
+        top_k: int = 20,
+        vector_weight: float = 0.7,
+        rrf_k: int = 60,
+    ) -> list[ChunkResult]:
+        """
+        Hybrid search: RRF(vector, FTS) — E3-2
+        Reciprocal Rank Fusion: score_rrf = Σ 1/(k + rank_i)
+        คืน top_k chunks เรียงตาม RRF score
+        """
+        vec_results = self.search_vector(query_embedding, tenant_id, department, access_level, top_k * 2)
+        fts_results = self.search_fts(query_text, tenant_id, department, access_level, top_k * 2)
+
+        # RRF fusion
+        rrf_scores: dict[int, float] = {}
+        chunk_map: dict[int, ChunkResult] = {}
+
+        for rank, chunk in enumerate(vec_results):
+            rrf_scores[chunk.chunk_id] = rrf_scores.get(chunk.chunk_id, 0) + vector_weight / (rrf_k + rank + 1)
+            chunk_map[chunk.chunk_id] = chunk
+
+        fts_weight = 1.0 - vector_weight
+        for rank, chunk in enumerate(fts_results):
+            rrf_scores[chunk.chunk_id] = rrf_scores.get(chunk.chunk_id, 0) + fts_weight / (rrf_k + rank + 1)
+            chunk_map.setdefault(chunk.chunk_id, chunk)
+
+        ranked = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)[:top_k]
+        results = []
+        for chunk_id, score in ranked:
+            chunk = chunk_map[chunk_id]
+            chunk.score = score
+            results.append(chunk)
+        return results
+
     # ------------------------------------------------------------------
     # Utilities
     # ------------------------------------------------------------------
