@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from monitoring import setup_logging, add_monitoring_middleware
-from routers import health, query, documents, logs, line
+from routers import health, query, documents, logs, line, auth
 
 setup_logging(os.getenv("LOG_LEVEL", "INFO"))
 
@@ -31,6 +31,7 @@ add_monitoring_middleware(app)
 
 # Routers
 app.include_router(health.router)
+app.include_router(auth.router)
 app.include_router(query.router, prefix="/api")
 app.include_router(documents.router, prefix="/api")
 app.include_router(logs.router, prefix="/api")

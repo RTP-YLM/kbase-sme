@@ -1,0 +1,775 @@
+openapi: 3.1.0
+info:
+  title: KbaseSME API
+  version: 0.1.0
+  description: KbaseSME RAG Knowledge Assistant API — Thai SME edition
+  contact:
+    name: RTP-YLM
+    email: syndome.th@gmail.com
+paths:
+  /health:
+    get:
+      tags:
+      - health
+      summary: Health
+      operationId: health_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+      description: Liveness check — ใช้โดย docker healthcheck
+  /health/ready:
+    get:
+      tags:
+      - health
+      summary: Readiness
+      description: Readiness check — ตรวจ Supabase + Redis ก่อนรับ traffic
+      operationId: readiness_health_ready_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /auth/login:
+    post:
+      tags:
+      - auth
+      summary: Login
+      description: Login ด้วย email+password คืน JWT (HS256) มี tenant_id, role, departments
+      operationId: login_auth_login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /auth/logout:
+    post:
+      tags:
+      - auth
+      summary: Logout
+      description: Client-side logout — invalidate token ฝั่ง client (stateless JWT)
+      operationId: logout_auth_logout_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/query:
+    post:
+      tags:
+      - query
+      summary: Query
+      operationId: query_api_query_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Unauthorized — token ไม่ถูกต้องหรือหมดอายุ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+      description: RAG query — hybrid search → rerank → grounded Thai answer. ถ้า
+        rerank score < threshold คืน no-answer
+  /api/query/feedback:
+    post:
+      tags:
+      - query
+      summary: Feedback
+      operationId: feedback_api_query_feedback_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Unauthorized — token ไม่ถูกต้องหรือหมดอายุ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+      description: บันทึก feedback ของ query ล่าสุด (correct/wrong/unclear)
+  /api/documents:
+    get:
+      tags:
+      - documents
+      summary: List Documents
+      operationId: list_documents_api_documents_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: department
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Department
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentInfo'
+                title: Response List Documents Api Documents Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Unauthorized — token ไม่ถูกต้องหรือหมดอายุ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: List เอกสารทั้งหมดของ tenant พร้อม chunk count, กรอง department
+        ได้
+    post:
+      tags:
+      - documents
+      summary: Upload Document
+      description: Upload ไฟล์ (.pdf/.docx/.md/.txt/.xlsx) → queue async ingest →
+        คืน job_id
+      operationId: upload_document_api_documents_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_upload_document_api_documents_post'
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Unauthorized — token ไม่ถูกต้องหรือหมดอายุ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden — ต้องการ role admin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/documents/{source_id}:
+    delete:
+      tags:
+      - documents
+      summary: Delete Document
+      operationId: delete_document_api_documents__source_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: source_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Source Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Unauthorized — token ไม่ถูกต้องหรือหมดอายุ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden — ต้องการ role admin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: Soft-delete เอกสาร (status=deleted) + ลบ chunks ออกจาก index
+  /api/documents/jobs/{job_id}:
+    get:
+      tags:
+      - documents
+      summary: Get Job
+      operationId: get_job_api_documents_jobs__job_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Unauthorized — token ไม่ถูกต้องหรือหมดอายุ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: ดูสถานะ ingest job (polling จนกว่า status=done)
+  /api/documents/{source_id}/reindex:
+    post:
+      tags:
+      - documents
+      summary: Reindex Document
+      description: Re-embed เอกสารด้วย model ใหม่ (ต้องมีไฟล์ต้นฉบับใน server)
+      operationId: reindex_document_api_documents__source_id__reindex_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: source_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Source Id
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Unauthorized — token ไม่ถูกต้องหรือหมดอายุ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden — ต้องการ role admin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/logs:
+    get:
+      tags:
+      - logs
+      summary: Get Logs
+      operationId: get_logs_api_logs_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: answered_only
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Answered Only
+      - name: unanswered_only
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Unanswered Only
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QueryLogRow'
+                title: Response Get Logs Api Logs Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Unauthorized — token ไม่ถูกต้องหรือหมดอายุ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: ดึง query logs ของ tenant (admin only) — ใช้แสดงใน admin dashboard
+        + คำถามตอบไม่ได้
+  /line/webhook:
+    post:
+      tags:
+      - line
+      summary: Line Webhook
+      operationId: line_webhook_line_webhook_post
+      parameters:
+      - name: x-line-signature
+        in: header
+        required: true
+        schema:
+          type: string
+          title: X-Line-Signature
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      description: LINE OA webhook — รับ message event, verify HMAC-SHA256, ตอบผ่าน
+        reply API
+components:
+  schemas:
+    Body_upload_document_api_documents_post:
+      properties:
+        file:
+          type: string
+          contentMediaType: application/octet-stream
+          title: File
+        department:
+          type: string
+          title: Department
+          default: general
+        access_level:
+          type: integer
+          title: Access Level
+          default: 2
+      type: object
+      required:
+      - file
+      title: Body_upload_document_api_documents_post
+    DocumentInfo:
+      properties:
+        id:
+          type: string
+          title: Id
+        filename:
+          type: string
+          title: Filename
+        title:
+          type: string
+          title: Title
+        department:
+          type: string
+          title: Department
+        status:
+          type: string
+          title: Status
+          enum:
+          - active
+          - deleted
+          - processing
+          description: สถานะเอกสาร
+        chunk_count:
+          type: integer
+          title: Chunk Count
+        created_at:
+          type: string
+          title: Created At
+      type: object
+      required:
+      - id
+      - filename
+      - title
+      - department
+      - status
+      - chunk_count
+      - created_at
+      title: DocumentInfo
+    FeedbackRequest:
+      properties:
+        question:
+          type: string
+          title: Question
+        feedback:
+          type: string
+          pattern: ^(correct|wrong|unclear)$
+          title: Feedback
+      type: object
+      required:
+      - question
+      - feedback
+      title: FeedbackRequest
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    HealthResponse:
+      properties:
+        status:
+          type: string
+          title: Status
+      type: object
+      required:
+      - status
+      title: HealthResponse
+    JobStatus:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        status:
+          type: string
+          title: Status
+          enum:
+          - queued
+          - processing
+          - done
+          - failed
+          description: สถานะ ingest job
+        source_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source Id
+        chunks:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Chunks
+        error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error
+      type: object
+      required:
+      - job_id
+      - status
+      title: JobStatus
+    LoginRequest:
+      properties:
+        email:
+          type: string
+          title: Email
+        password:
+          type: string
+          title: Password
+      type: object
+      required:
+      - email
+      - password
+      title: LoginRequest
+    QueryLogRow:
+      properties:
+        id:
+          type: integer
+          title: Id
+        question:
+          type: string
+          title: Question
+        answered:
+          type: boolean
+          title: Answered
+        from_cache:
+          type: boolean
+          title: From Cache
+        latency_ms:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Latency Ms
+        rerank_top_score:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Rerank Top Score
+        llm_model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Llm Model
+        feedback:
+          anyOf:
+          - type: string
+            enum:
+            - correct
+            - wrong
+            - unclear
+          - type: 'null'
+          title: Feedback
+        created_at:
+          type: string
+          title: Created At
+      type: object
+      required:
+      - id
+      - question
+      - answered
+      - from_cache
+      - latency_ms
+      - rerank_top_score
+      - llm_model
+      - feedback
+      - created_at
+      title: QueryLogRow
+    QueryRequest:
+      properties:
+        question:
+          type: string
+          maxLength: 1000
+          minLength: 1
+          title: Question
+        department:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Department
+      type: object
+      required:
+      - question
+      title: QueryRequest
+    QueryResponse:
+      properties:
+        answer:
+          type: string
+          title: Answer
+        sources:
+          items:
+            $ref: '#/components/schemas/SourceRef'
+          type: array
+          title: Sources
+        from_cache:
+          type: boolean
+          title: From Cache
+        answered:
+          type: boolean
+          title: Answered
+        latency_ms:
+          type: integer
+          title: Latency Ms
+      type: object
+      required:
+      - answer
+      - sources
+      - from_cache
+      - answered
+      - latency_ms
+      title: QueryResponse
+    SourceRef:
+      properties:
+        source_id:
+          type: string
+          title: Source Id
+        section:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Section
+        page:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Page
+        score:
+          type: number
+          title: Score
+      type: object
+      required:
+      - source_id
+      - section
+      - page
+      - score
+      title: SourceRef
+    TokenResponse:
+      properties:
+        access_token:
+          type: string
+          title: Access Token
+        token_type:
+          type: string
+          title: Token Type
+          default: bearer
+        role:
+          type: string
+          title: Role
+        expires_in:
+          type: integer
+          title: Expires In
+      type: object
+      required:
+      - access_token
+      - role
+      - expires_in
+      title: TokenResponse
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: error message
+      required:
+      - detail
+      title: ErrorResponse
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer
+servers:
+- url: http://localhost:8000
+  description: Local dev
+- url: https://your-domain.com
+  description: Production
+tags:
+- name: health
+  description: Liveness/readiness — ใช้โดย docker + load balancer
+- name: auth
+  description: Login/logout — คืน JWT สำหรับทุก endpoint ที่ต้องการ auth
+- name: query
+  description: RAG query + feedback — หัวใจของ product (E5-1 Web Chat, E6 LINE)
+- name: documents
+  description: Document management — upload/list/delete/reindex (E5-2 Admin UI)
+- name: logs
+  description: Query logs + unanswered — analytics (E5-3 Admin)
+- name: line
+  description: LINE OA webhook integration
