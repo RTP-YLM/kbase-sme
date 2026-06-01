@@ -5,8 +5,9 @@ Single-tenant DFY phase — validate against app_users table
 import os
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, EmailStr
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
+from auth import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -80,3 +81,21 @@ async def login(req: LoginRequest):
 async def logout():
     """Client-side logout — invalidate token ฝั่ง client (stateless JWT)"""
     return {"status": "ok"}
+
+
+class MeResponse(BaseModel):
+    user_id: str
+    role: str
+    tenant_id: str
+    departments: list[str]
+
+
+@router.get("/me", response_model=MeResponse)
+async def me(user=Depends(get_current_user)):
+    """คืน profile ของ user ที่ login อยู่ (ดึงจาก JWT)"""
+    return MeResponse(
+        user_id=user.user_id,
+        role=user.role,
+        tenant_id=user.tenant_id,
+        departments=user.departments,
+    )
