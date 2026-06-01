@@ -7,19 +7,32 @@ openai>=1.0.0
 anthropic>=0.18.0
 
 # RAG / Vector Store
-chromadb>=0.4.0
 sentence-transformers>=2.2.0
-supabase>=2.0.0  # Supabase client with pgvector support
+supabase>=2.0.0
+pgvector>=0.2.0
+psycopg2-binary>=2.9.0
+
+# Embedding + Reranker (BGE-M3, E3-1/E3-3)
+FlagEmbedding>=1.2.0
+
+# Thai NLP (E2-2)
+pythainlp>=5.0.0
 
 # Document Processing
 pypdf>=3.0.0
 python-docx>=1.0.0
+openpyxl>=3.1.0       # Excel support (E2-4)
+
+# Async Queue (E2-5)
+redis[hiredis]>=5.0.0
+celery[redis]>=5.3.0
 
 # Web Framework
 fastapi>=0.104.0
 uvicorn>=0.24.0
-streamlit>=1.28.0
+python-multipart>=0.0.9
 
 # Utilities
 pydantic>=2.0.0
 httpx>=0.25.0
+hashlib2>=1.0.0

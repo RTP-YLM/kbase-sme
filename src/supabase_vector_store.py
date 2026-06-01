@@ -1,193 +1,262 @@
 """
-Supabase Vector Store
-Use Supabase with pgvector for RAG storage
+Supabase Vector Store — V1 Schema (E3-1)
+ใช้ V1 schema: knowledge_sources + knowledge_chunks (1024-dim BGE-M3)
 """
-from typing import List, Dict, Any, Optional
-from pathlib import Path
 import logging
+import os
+import uuid
+from dataclasses import dataclass
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_TENANT_ID = "00000000-0000-0000-0000-000000000001"
+INGEST_BATCH_SIZE = 50  # upsert ทีละ 50 chunks
+
+
+@dataclass
+class ChunkResult:
+    """ผลลัพธ์จาก vector search"""
+    chunk_id: int
+    source_id: str
+    content: str
+    section_title: Optional[str]
+    page_number: Optional[int]
+    metadata: dict
+    score: float          # similarity (vector) หรือ fts_rank (FTS)
+    department: Optional[str]
+    access_level: int
+
 
 class SupabaseVectorStore:
-    """Vector store using Supabase pgvector"""
-    
-    def __init__(self, supabase_url: str, supabase_key: str, table_name: str = "documents"):
-        """
-        Initialize Supabase vector store
-        
-        Args:
-            supabase_url: Supabase project URL
-            supabase_key: Supabase anon/service key
-            table_name: Table name for storing embeddings
-        """
-        self.supabase_url = supabase_url
-        self.supabase_key = supabase_key
-        self.table_name = table_name
-        self.client = None
-        self._initialized = False
-    
-    def initialize(self):
-        """Initialize Supabase client"""
-        if self._initialized:
+    """
+    V1 Vector Store — knowledge_sources + knowledge_chunks
+    ใช้ service_role key เท่านั้น (RLS bypass)
+    """
+
+    def __init__(
+        self,
+        supabase_url: Optional[str] = None,
+        supabase_key: Optional[str] = None,
+    ):
+        self._url = supabase_url or os.getenv("SUPABASE_URL", "")
+        self._key = supabase_key or os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+        self._client = None
+
+    # ------------------------------------------------------------------
+    # Connection
+    # ------------------------------------------------------------------
+
+    def _ensure_client(self):
+        if self._client is not None:
             return
-        
-        try:
-            from supabase import create_client, Client
-            self.client: Client = create_client(self.supabase_url, self.supabase_key)
-            self._initialized = True
-            logger.info(f"Connected to Supabase: {self.supabase_url}")
-        except ImportError:
-            raise ImportError("supabase package not installed. Install with: pip install supabase")
-        except Exception as e:
-            logger.error(f"Failed to connect to Supabase: {e}")
-            raise
-    
-    def create_table_if_not_exists(self, embedding_dim: int = 384):
+        if not self._url or not self._key:
+            raise ValueError(
+                "ต้องตั้งค่า SUPABASE_URL และ SUPABASE_SERVICE_ROLE_KEY ใน .env"
+            )
+        from supabase import create_client
+        self._client = create_client(self._url, self._key)
+        logger.info(f"Supabase client พร้อมใช้งาน: {self._url}")
+
+    # ------------------------------------------------------------------
+    # Upsert — Ingestion path
+    # ------------------------------------------------------------------
+
+    def upsert_source(
+        self,
+        filename: str,
+        title: str,
+        checksum: str,
+        file_size_bytes: int,
+        doc_type: str = "file",
+        department: str = "general",
+        access_level: int = 2,
+        page_count: Optional[int] = None,
+        tenant_id: str = DEFAULT_TENANT_ID,
+        metadata: Optional[dict] = None,
+    ) -> str:
         """
-        Create the vector table if it doesn't exist
-        
-        Note: This requires running SQL in Supabase SQL Editor first.
-        See setup instructions in README.
+        Upsert knowledge_sources row (checksum dedup)
+        คืน source_id (uuid string)
         """
-        # For now, just verify table exists by querying
-        try:
-            result = self.client.table(self.table_name).select("id").limit(1).execute()
-            logger.info(f"Table {self.table_name} exists")
-        except Exception as e:
-            logger.warning(f"Table {self.table_name} may not exist: {e}")
-            logger.warning("Please run the setup SQL in Supabase SQL Editor (see README)")
-            raise
-    
-    def add_documents(self, documents: List[Dict[str, Any]], collection_name: str = "default"):
-        """
-        Add documents to the vector store
-        
-        Args:
-            documents: List of dicts with 'text', 'embedding', and 'metadata'
-            collection_name: Collection/group name
-        """
-        if not self._initialized:
-            self.initialize()
-        
-        if not documents:
-            return
-        
-        # Prepare records for insertion
-        records = []
-        for doc in documents:
-            record = {
-                "content": doc.get("text", ""),
-                "embedding": doc.get("embedding", []),
-                "metadata": doc.get("metadata", {}),
-                "collection": collection_name,
-            }
-            records.append(record)
-        
-        # Insert in batches
-        batch_size = 100
-        for i in range(0, len(records), batch_size):
-            batch = records[i:i + batch_size]
-            result = self.client.table(self.table_name).insert(batch).execute()
-            logger.info(f"Inserted {len(batch)} documents into Supabase")
-    
-    def search(self, query_embedding: List[float], collection_name: str = "default", 
-               top_k: int = 5, threshold: float = 0.0) -> List[Dict[str, Any]]:
-        """
-        Search for similar documents using cosine similarity
-        
-        Args:
-            query_embedding: Query vector
-            collection_name: Collection to search
-            top_k: Number of results to return
-            threshold: Minimum similarity threshold (0-1)
-        
-        Returns:
-            List of matching documents with similarity scores
-        """
-        if not self._initialized:
-            self.initialize()
-        
-        # Use pgvector cosine similarity
-        # Note: This requires a RPC function or raw SQL query
-        # For now, use a simple approach with match_documents function
-        
-        try:
-            # Call the match_documents RPC function (created in setup SQL)
-            result = self.client.rpc(
-                "match_documents",
-                {
-                    "query_embedding": query_embedding,
-                    "match_count": top_k,
-                    "filter_collection": collection_name,
-                }
-            ).execute()
-            
-            if not result.data:
-                return []
-            
-            # Format results
-            documents = []
-            for row in result.data:
-                # match_documents() already returns cosine similarity: 1 - distance
-                similarity = row.get("similarity", 0)
-                if similarity >= threshold:
-                    documents.append({
-                        "text": row.get("content", ""),
-                        "metadata": row.get("metadata", {}),
-                        "similarity": similarity,
-                    })
-            
-            return documents
-        except Exception as e:
-            logger.error(f"Search failed: {e}")
-            # Fallback: simple query without vector search
-            return self._fallback_search(collection_name, top_k)
-    
-    def _fallback_search(self, collection_name: str, top_k: int) -> List[Dict[str, Any]]:
-        """Fallback search without vector similarity (returns recent docs)"""
-        try:
-            result = self.client.table(self.table_name)\
-                .select("content, metadata")\
-                .eq("collection", collection_name)\
-                .limit(top_k)\
-                .execute()
-            
-            if not result.data:
-                return []
-            
-            return [
-                {"text": row["content"], "metadata": row["metadata"], "similarity": 0.0}
-                for row in result.data
-            ]
-        except Exception as e:
-            logger.error(f"Fallback search failed: {e}")
-            return []
-    
-    def count(self, collection_name: str = "default") -> int:
-        """Count documents in a collection"""
-        if not self._initialized:
-            self.initialize()
-        
-        try:
-            result = self.client.table(self.table_name)\
-                .select("id", count="exact")\
-                .eq("collection", collection_name)\
-                .execute()
-            
-            return result.count or 0
-        except Exception as e:
-            logger.error(f"Count failed: {e}")
-            return 0
-    
-    def delete_collection(self, collection_name: str):
-        """Delete all documents in a collection"""
-        if not self._initialized:
-            self.initialize()
-        
-        result = self.client.table(self.table_name)\
-            .delete()\
-            .eq("collection", collection_name)\
+        self._ensure_client()
+
+        # checksum dedup — ถ้ามีอยู่แล้วคืน id เดิม
+        existing = (
+            self._client.table("knowledge_sources")
+            .select("id, status")
+            .eq("tenant_id", tenant_id)
+            .eq("checksum", checksum)
+            .limit(1)
             .execute()
-        
-        logger.info(f"Deleted collection: {collection_name}")
+        )
+        if existing.data:
+            source_id = existing.data[0]["id"]
+            logger.info(f"checksum ซ้ำ — ข้าม {filename} (source_id={source_id[:8]}...)")
+            return source_id
+
+        source_id = str(uuid.uuid4())
+        row = {
+            "id": source_id,
+            "tenant_id": tenant_id,
+            "title": title,
+            "filename": filename,
+            "checksum": checksum,
+            "file_size_bytes": file_size_bytes,
+            "doc_type": doc_type,
+            "department": department,
+            "access_level": access_level,
+            "status": "active",
+            "metadata": metadata or {},
+        }
+        if page_count is not None:
+            row["page_count"] = page_count
+
+        self._client.table("knowledge_sources").insert(row).execute()
+        logger.info(f"upsert_source: {filename} → {source_id[:8]}...")
+        return source_id
+
+    def upsert_chunks(
+        self,
+        source_id: str,
+        chunks,                    # list[Chunk] จาก document_loader
+        embeddings: list[list[float]],
+        department: str = "general",
+        access_level: int = 2,
+        tenant_id: str = DEFAULT_TENANT_ID,
+    ):
+        """
+        Upsert knowledge_chunks rows พร้อม embedding (1024-dim)
+        ลบ chunk เก่าของ source นี้ก่อน แล้ว insert ใหม่ทั้งหมด
+        """
+        self._ensure_client()
+
+        if len(chunks) != len(embeddings):
+            raise ValueError(
+                f"chunks ({len(chunks)}) กับ embeddings ({len(embeddings)}) จำนวนไม่ตรงกัน"
+            )
+
+        # ลบ chunks เก่า (re-ingest)
+        self._client.table("knowledge_chunks").delete().eq("source_id", source_id).execute()
+
+        records = []
+        for chunk, embedding in zip(chunks, embeddings):
+            records.append({
+                "source_id": source_id,
+                "tenant_id": tenant_id,
+                "chunk_index": chunk.chunk_index,
+                "content": chunk.content,
+                "embedding": embedding,
+                "section_title": chunk.section_title,
+                "page_number": chunk.page_number,
+                "token_count": chunk.token_count,
+                "department": department,
+                "access_level": access_level,
+                "metadata": chunk.metadata,
+            })
+
+        # batch insert
+        for i in range(0, len(records), INGEST_BATCH_SIZE):
+            batch = records[i: i + INGEST_BATCH_SIZE]
+            self._client.table("knowledge_chunks").insert(batch).execute()
+            logger.debug(f"  upsert_chunks {i + len(batch)}/{len(records)}")
+
+        logger.info(
+            f"upsert_chunks: source={source_id[:8]}... → {len(records)} chunks"
+        )
+
+    # ------------------------------------------------------------------
+    # Search — Retrieval path
+    # ------------------------------------------------------------------
+
+    def search_vector(
+        self,
+        query_embedding: list[float],
+        tenant_id: str = DEFAULT_TENANT_ID,
+        department: Optional[str] = None,
+        access_level: int = 2,
+        top_k: int = 20,
+    ) -> list[ChunkResult]:
+        """
+        Vector search ผ่าน match_chunks_vector RPC
+        คืน list[ChunkResult] เรียงตาม cosine similarity มากไปน้อย
+        """
+        self._ensure_client()
+
+        result = self._client.rpc(
+            "match_chunks_vector",
+            {
+                "query_embedding": query_embedding,
+                "p_tenant_id": tenant_id,
+                "p_department": department,
+                "p_access_level": access_level,
+                "match_count": top_k,
+            },
+        ).execute()
+
+        return [self._row_to_chunk_result(row, score_key="similarity") for row in (result.data or [])]
+
+    def search_fts(
+        self,
+        query_text: str,
+        tenant_id: str = DEFAULT_TENANT_ID,
+        department: Optional[str] = None,
+        access_level: int = 2,
+        top_k: int = 20,
+    ) -> list[ChunkResult]:
+        """
+        Full-text search ผ่าน match_chunks_fts RPC
+        คืน list[ChunkResult] เรียงตาม ts_rank มากไปน้อย
+        """
+        self._ensure_client()
+
+        result = self._client.rpc(
+            "match_chunks_fts",
+            {
+                "query_text": query_text,
+                "p_tenant_id": tenant_id,
+                "p_department": department,
+                "p_access_level": access_level,
+                "match_count": top_k,
+            },
+        ).execute()
+
+        return [self._row_to_chunk_result(row, score_key="fts_rank") for row in (result.data or [])]
+
+    # ------------------------------------------------------------------
+    # Utilities
+    # ------------------------------------------------------------------
+
+    def count_chunks(self, tenant_id: str = DEFAULT_TENANT_ID) -> int:
+        self._ensure_client()
+        result = (
+            self._client.table("knowledge_chunks")
+            .select("id", count="exact")
+            .eq("tenant_id", tenant_id)
+            .execute()
+        )
+        return result.count or 0
+
+    def count_sources(self, tenant_id: str = DEFAULT_TENANT_ID) -> int:
+        self._ensure_client()
+        result = (
+            self._client.table("knowledge_sources")
+            .select("id", count="exact")
+            .eq("tenant_id", tenant_id)
+            .execute()
+        )
+        return result.count or 0
+
+    @staticmethod
+    def _row_to_chunk_result(row: dict, score_key: str) -> ChunkResult:
+        return ChunkResult(
+            chunk_id=row["id"],
+            source_id=row["source_id"],
+            content=row["content"],
+            section_title=row.get("section_title"),
+            page_number=row.get("page_number"),
+            metadata=row.get("metadata") or {},
+            score=row.get(score_key, 0.0),
+            department=row.get("department"),
+            access_level=row.get("access_level", 2),
+        )
