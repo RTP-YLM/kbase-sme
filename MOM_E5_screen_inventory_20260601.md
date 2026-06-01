@@ -37,21 +37,17 @@
 
 ## 3. Decisions ที่ต้องตัดสินใจก่อนเขียนโค้ดแม้แต่บรรทัดเดียว
 
-**D1 — JWT Storage**  
-- Option A: `httpOnly` cookie (secure, ต้องมี Next.js API route proxy)  
-- Option B: memory/Zustand (simpler, XSS risk ต่ำกว่า localStorage)  
-- ❌ localStorage — ห้าม  
-- **→ PENDING: ต้องตัดสินก่อน build auth guard**
+**D1 — JWT Storage** ✅ **ตัดสินแล้ว: httpOnly cookie**  
+- เหตุผล: security สำคัญกว่า simplicity, PDPA เป็นจุดขาย  
+- Impl: Next.js API route proxy set/clear cookie, client ไม่แตะ token โดยตรง
 
-**D2 — Query Streaming**  
-- Option A: SSE streaming (`text/event-stream`) — typing indicator, ไม่ timeout  
-- Option B: sync JSON — simpler, ใช้ loading spinner  
-- **→ PENDING: ตัดสินใจก่อน build Web Chat**
+**D2 — Query Streaming** ✅ **ตัดสินแล้ว: sync JSON ก่อน, SSE ทีหลัง**  
+- เหตุผล: ตาม risk mitigation MOM ("Build sync first, SSE เป็น enhancement")  
+- Impl: loading spinner + disabled input ระหว่างรอ, SSE เพิ่มใน v2
 
-**D3 — UI Language**  
-- Option A: Thai-only  
-- Option B: Thai/English bilingual toggle  
-- **→ PENDING: กระทบ copy string ทุกหน้าตั้งแต่วันแรก**
+**D3 — UI Language** ✅ **ตัดสินแล้ว: Thai-only**  
+- เหตุผล: product ขาย SME ไทย, ไม่ต้อง bilingual ใน MVP, ค่อยเพิ่ม v2  
+- Impl: copy string ทั้งหมดเป็นภาษาไทย, ไม่มี i18n layer
 
 ---
 
