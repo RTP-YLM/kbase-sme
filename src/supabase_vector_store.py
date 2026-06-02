@@ -103,7 +103,7 @@ class SupabaseVectorStore:
             "filename": filename,
             "checksum": checksum,
             "file_size_bytes": file_size_bytes,
-            "doc_type": doc_type,
+            "source_type": doc_type,   # column จริงใน schema คือ source_type
             "department": department,
             "access_level": access_level,
             "status": "active",
