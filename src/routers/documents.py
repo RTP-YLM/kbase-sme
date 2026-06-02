@@ -81,7 +81,7 @@ async def upload_document(
     access_level: int = Form(default=2),
 ):
     """Upload ไฟล์ → queue async ingest job"""
-    allowed = {".pdf", ".txt", ".md", ".docx", ".xlsx"}
+    allowed = {".pdf", ".txt", ".md", ".docx", ".xlsx", ".png", ".jpg", ".jpeg", ".webp"}
     suffix = os.path.splitext(file.filename or "")[1].lower()
     if suffix not in allowed:
         raise HTTPException(status_code=422, detail=f"ไม่รองรับ format: {suffix}")

@@ -186,8 +186,8 @@ paths:
       tags:
       - documents
       summary: Upload Document
-      description: Upload ไฟล์ (.pdf/.docx/.md/.txt/.xlsx) → queue async ingest →
-        คืน job_id
+      description: Upload ไฟล์ (.pdf/.docx/.md/.txt/.xlsx/.png/.jpg/.jpeg/.webp) → queue async ingest →
+        คืน job_id — PDF สแกนและรูปภาพจะใช้ Typhoon OCR อัตโนมัติ
       operationId: upload_document_api_documents_post
       security:
       - HTTPBearer: []

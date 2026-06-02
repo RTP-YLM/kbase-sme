@@ -6,6 +6,7 @@ Output format matches V1 schema (knowledge_sources + knowledge_chunks).
 """
 import hashlib
 import logging
+import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -151,29 +152,43 @@ def _detect_sections_docx(file_path: Path) -> list[Section]:
     return sections
 
 
-def _load_pdf_sections(file_path: Path) -> tuple[list[Section], int]:
+def _load_pdf_sections(
+    file_path: Path,
+    ocr_api_key: Optional[str] = None,
+) -> tuple[list[Section], int]:
     """
     โหลด PDF text-based พร้อม page tracking
-    ถ้า text < 10 chars/page → ควรใช้ OCR (E2-3) แต่ยังไม่มีตอนนี้
+    ถ้า PDF เป็น scanned (text น้อย) → ใช้ Typhoon OCR อัตโนมัติ
     """
     from pypdf import PdfReader  # type: ignore
+    from .ocr import TyphoonOCR, is_scanned_pdf
 
+    # ตรวจสอบก่อนว่าต้องการ OCR หรือไม่
+    if is_scanned_pdf(file_path):
+        logger.info(f"{file_path.name}: ตรวจพบ scanned PDF → ใช้ Typhoon OCR")
+        ocr = TyphoonOCR(api_key=ocr_api_key)
+        page_texts, page_count = ocr.pdf_to_texts(file_path)
+        sections: list[Section] = []
+        for page_num, text in enumerate(page_texts, start=1):
+            if text.strip():
+                for s in _detect_sections_text(text):
+                    sections.append(Section(
+                        title=s.title,
+                        content=s.content,
+                        page_number=page_num,
+                    ))
+        return sections, page_count
+
+    # PDF มี text layer — อ่านปกติ
     reader = PdfReader(file_path)
-    sections: list[Section] = []
+    sections = []
     page_count = len(reader.pages)
 
     for page_num, page in enumerate(reader.pages, start=1):
         text = page.extract_text() or ""
-        if len(text.strip()) < 10:
-            logger.warning(
-                f"หน้า {page_num} ใน {file_path.name} มีข้อความน้อยมาก "
-                f"({len(text.strip())} chars) — อาจต้องใช้ OCR (E2-3)"
-            )
+        if not text.strip():
             continue
-
-        # แต่ละหน้าเป็น section ย่อย — ใช้ text section detection ภายใน
-        page_sections = _detect_sections_text(text)
-        for s in page_sections:
+        for s in _detect_sections_text(text):
             sections.append(Section(
                 title=s.title,
                 content=s.content,
@@ -181,6 +196,18 @@ def _load_pdf_sections(file_path: Path) -> tuple[list[Section], int]:
             ))
 
     return sections, page_count
+
+
+def _load_image_sections(
+    file_path: Path,
+    ocr_api_key: Optional[str] = None,
+) -> tuple[list[Section], None]:
+    """โหลดรูปภาพ → OCR → sections"""
+    from .ocr import TyphoonOCR
+
+    ocr = TyphoonOCR(api_key=ocr_api_key)
+    text = ocr.image_to_text(file_path)
+    return _detect_sections_text(text), None
 
 
 def _load_excel_sections(file_path: Path) -> list[Section]:
@@ -346,8 +373,10 @@ class DocumentLoader:
         self,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         chunk_overlap: int = DEFAULT_CHUNK_OVERLAP,
+        ocr_api_key: Optional[str] = None,
     ):
         self.chunker = ThaiChunker(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+        self._ocr_api_key = ocr_api_key or os.environ.get("TYPHOON_OCR_API_KEY")
 
     def load_file(self, file_path: str | Path) -> tuple[SourceInfo, list[Chunk]]:
         """
@@ -361,11 +390,15 @@ class DocumentLoader:
         suffix = path.suffix.lower()
 
         loaders = {
-            ".txt": self._load_text,
-            ".md":  self._load_text,
-            ".pdf": self._load_pdf,
+            ".txt":  self._load_text,
+            ".md":   self._load_text,
+            ".pdf":  self._load_pdf,
             ".docx": self._load_docx,
             ".xlsx": self._load_excel,
+            ".png":  self._load_image,
+            ".jpg":  self._load_image,
+            ".jpeg": self._load_image,
+            ".webp": self._load_image,
         }
 
         if suffix not in loaders:
@@ -411,7 +444,10 @@ class DocumentLoader:
         return _detect_sections_text(text), None
 
     def _load_pdf(self, path: Path) -> tuple[list[Section], int]:
-        return _load_pdf_sections(path)
+        return _load_pdf_sections(path, ocr_api_key=self._ocr_api_key)
+
+    def _load_image(self, path: Path) -> tuple[list[Section], None]:
+        return _load_image_sections(path, ocr_api_key=self._ocr_api_key)
 
     def _load_docx(self, path: Path) -> tuple[list[Section], None]:
         return _detect_sections_docx(path), None
