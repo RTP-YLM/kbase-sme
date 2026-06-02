@@ -37,3 +37,4 @@ python-multipart>=0.0.9
 pydantic>=2.0.0
 httpx>=0.25.0
 PyJWT>=2.8.0          # JWT decode/encode (E4-1 auth)
+bcrypt>=4.0.0         # password hashing (E4-1 login)
