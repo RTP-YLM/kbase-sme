@@ -206,3 +206,16 @@ class RAGPipeline:
             output_tokens=result.output_tokens or None,
         )
         log_query(log)
+
+
+# ---------------------------------------------------------------------------
+# Singleton — โหลด model (BGE-M3 + reranker) ครั้งเดียวต่อ process
+# ห้ามสร้าง RAGPipeline() ใหม่ทุก request ไม่งั้น model reload ทุกครั้ง (ช้า ~20s)
+# ---------------------------------------------------------------------------
+from functools import lru_cache
+
+
+@lru_cache(maxsize=1)
+def get_pipeline() -> "RAGPipeline":
+    """คืน RAGPipeline ตัวเดียว (model คงอยู่ใน memory ข้าม request)"""
+    return RAGPipeline()

@@ -139,8 +139,8 @@ async def line_webhook(
 
         # RAG query
         try:
-            from rag_pipeline import RAGPipeline
-            pipeline = RAGPipeline()
+            from rag_pipeline import get_pipeline
+            pipeline = get_pipeline()  # singleton — model โหลดครั้งเดียว
             result = pipeline.query(
                 question=question,
                 tenant_id=DEFAULT_TENANT_ID,

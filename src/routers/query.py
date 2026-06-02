@@ -41,9 +41,9 @@ async def query(
     req: QueryRequest,
     user: Annotated[TokenPayload, Depends(get_current_user)],
 ):
-    from rag_pipeline import RAGPipeline
+    from rag_pipeline import get_pipeline
 
-    pipeline = RAGPipeline()
+    pipeline = get_pipeline()  # singleton — model โหลดครั้งเดียว ไม่ reload ทุก request
     result = pipeline.query(
         question=req.question,
         tenant_id=user.tenant_id,
