@@ -72,12 +72,15 @@ class OllamaProvider(BaseLLMProvider):
 class OpenAIProvider(BaseLLMProvider):
     """OpenAI API provider"""
     
-    def __init__(self, model: str = "gpt-4o-mini", api_key: Optional[str] = None, **kwargs):
+    def __init__(self, model: str = "gpt-4o-mini", api_key: Optional[str] = None, base_url: Optional[str] = None, **kwargs):
         api_key = api_key or os.getenv("OPENAI_API_KEY")
-        super().__init__(model, api_key=api_key, **kwargs)
+        base_url = base_url or os.getenv("OPENAI_BASE_URL")
+        super().__init__(model, api_key=api_key, base_url=base_url, **kwargs)
         try:
             from openai import OpenAI
-            self.client = OpenAI(api_key=self.api_key)
+            # base_url รองรับ OpenAI-compatible endpoint (เช่น Xiaomi MiMo, Together, vLLM)
+            self.client = OpenAI(api_key=self.api_key, base_url=self.base_url) if self.base_url \
+                else OpenAI(api_key=self.api_key)
         except ImportError:
             raise ImportError("Please install openai: pip install openai")
     

@@ -74,7 +74,9 @@ class RAGPipeline:
 
     def _get_llm(self):
         from llm_provider import get_llm_provider
-        return get_llm_provider()
+        from config import get_config
+        cfg = get_config()
+        return get_llm_provider(cfg.get("llm.provider", "openai"), cfg.llm)
 
     def query(
         self,
