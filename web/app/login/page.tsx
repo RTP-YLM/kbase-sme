@@ -34,8 +34,8 @@ export default function LoginPage() {
       }
 
       // token อยู่ใน httpOnly cookie แล้ว — เก็บแค่ role ใน store
-      // ดึง profile เพิ่มเติมจาก /api/auth/me
-      const me = await fetch("/api/proxy/api/auth/me").then((r) =>
+      // ดึง profile เพิ่มเติมจาก /auth/me (mount ที่ /auth ไม่มี /api)
+      const me = await fetch("/api/proxy/auth/me").then((r) =>
         r.ok ? r.json() : null
       );
 

@@ -19,8 +19,8 @@ export function AuthGuard({ children, require }: Props) {
   useEffect(() => {
     if (ready) return;
 
-    // ดึง user profile จาก /api/proxy/api/auth/me
-    fetch("/api/proxy/api/auth/me")
+    // ดึง user profile จาก /api/proxy/auth/me (auth router mount ที่ /auth ไม่มี /api)
+    fetch("/api/proxy/auth/me")
       .then((r) => {
         if (!r.ok) throw new Error("unauthorized");
         return r.json();
