@@ -161,7 +161,7 @@ def _load_pdf_sections(
     ถ้า PDF เป็น scanned (text น้อย) → ใช้ Typhoon OCR อัตโนมัติ
     """
     from pypdf import PdfReader  # type: ignore
-    from .ocr import TyphoonOCR, is_scanned_pdf
+    from ocr import TyphoonOCR, is_scanned_pdf
 
     # ตรวจสอบก่อนว่าต้องการ OCR หรือไม่
     if is_scanned_pdf(file_path):
@@ -203,7 +203,7 @@ def _load_image_sections(
     ocr_api_key: Optional[str] = None,
 ) -> tuple[list[Section], None]:
     """โหลดรูปภาพ → OCR → sections"""
-    from .ocr import TyphoonOCR
+    from ocr import TyphoonOCR
 
     ocr = TyphoonOCR(api_key=ocr_api_key)
     text = ocr.image_to_text(file_path)
