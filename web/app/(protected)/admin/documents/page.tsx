@@ -32,6 +32,7 @@ export default function AdminDocumentsPage() {
   const [showUpload, setShowUpload] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [reindexingId, setReindexingId] = useState<string | null>(null);
+  const [reindexError, setReindexError] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
 
   const fetchDocs = useCallback(async () => {
@@ -51,14 +52,20 @@ export default function AdminDocumentsPage() {
 
   async function handleReindex(id: string) {
     setReindexingId(id);
+    setReindexError(null);
     try {
       const res = await fetch(`/api/proxy/api/documents/${id}/reindex`, {
         method: "POST",
       });
-      if (!res.ok) throw new Error("reindex failed");
-      // รอสักครู่แล้ว refresh (job async)
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setReindexError(err.detail ?? `re-index ล้มเหลว (${res.status})`);
+        return;
+      }
       await new Promise((r) => setTimeout(r, 1500));
       fetchDocs();
+    } catch {
+      setReindexError("re-index ล้มเหลว — กรุณาลองใหม่");
     } finally {
       setReindexingId(null);
     }
@@ -179,6 +186,14 @@ export default function AdminDocumentsPage() {
                 {filtered.length} เอกสาร
                 {filter ? ` ใน ${DEPT_LABELS[filter] ?? filter}` : ""}
               </p>
+            )}
+
+            {/* reindex error toast */}
+            {reindexError && (
+              <div className="mt-3 flex items-center justify-between rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700 ring-1 ring-red-200">
+                <span>⚠️ {reindexError}</span>
+                <button onClick={() => setReindexError(null)} className="ml-3 text-red-400 hover:text-red-600">✕</button>
+              </div>
             )}
 
           </div>
