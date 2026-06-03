@@ -60,6 +60,7 @@ export default function ChatPage() {
         content: data.answered
           ? data.answer
           : "ขออภัย ไม่พบข้อมูลที่เกี่ยวข้องในเอกสารที่มีอยู่ กรุณาติดต่อผู้รับผิดชอบโดยตรง",
+        question,          // เก็บคำถามไว้ส่ง feedback ภายหลัง
         sources: data.sources ?? [],
         answered: data.answered,
         from_cache: data.from_cache,
@@ -89,7 +90,7 @@ export default function ChatPage() {
     await fetch("/api/proxy/api/query/feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: msg.content, feedback: sentiment }),
+      body: JSON.stringify({ question: msg.question ?? msg.content, feedback: sentiment }),
     }).catch(() => {});
   }
 

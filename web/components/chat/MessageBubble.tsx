@@ -14,6 +14,7 @@ export interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+  question?: string;   // คำถามที่ถาม (เก็บใน assistant msg เพื่อส่ง feedback)
   sources?: Source[];
   answered?: boolean;
   from_cache?: boolean;
