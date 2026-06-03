@@ -48,7 +48,7 @@ export default function ChatPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question,
-          department: activeDept ?? undefined, // null = ค้นทุก dept
+          department: activeDept ?? undefined,
         }),
       });
 
@@ -60,7 +60,7 @@ export default function ChatPage() {
         content: data.answered
           ? data.answer
           : "ขออภัย ไม่พบข้อมูลที่เกี่ยวข้องในเอกสารที่มีอยู่ กรุณาติดต่อผู้รับผิดชอบโดยตรง",
-        question,          // เก็บคำถามไว้ส่ง feedback ภายหลัง
+        question,
         sources: data.sources ?? [],
         answered: data.answered,
         from_cache: data.from_cache,
@@ -90,7 +90,10 @@ export default function ChatPage() {
     await fetch("/api/proxy/api/query/feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: msg.question ?? msg.content, feedback: sentiment }),
+      body: JSON.stringify({
+        question: msg.question ?? msg.content,
+        feedback: sentiment,
+      }),
     }).catch(() => {});
   }
 
@@ -100,9 +103,12 @@ export default function ChatPage() {
 
       {/* department selector — แสดงเฉพาะถ้ามี dept > 1 */}
       {departments.length > 1 && (
-        <div className="border-b border-gray-200 bg-white px-4 py-2 shadow-sm">
-          <div className="mx-auto flex max-w-3xl items-center gap-2 overflow-x-auto">
-            <span className="shrink-0 text-xs font-medium text-gray-400">ค้นใน:</span>
+        <div className="border-b border-gray-200 bg-white px-4 py-2.5">
+          <div className="mx-auto flex max-w-3xl items-center gap-2 overflow-x-auto pb-0.5">
+            <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-gray-400">
+              ค้นใน
+            </span>
+            <div className="mx-1 h-4 w-px bg-gray-200" />
             <button
               onClick={() => setActiveDept(null)}
               className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-all ${
@@ -132,7 +138,7 @@ export default function ChatPage() {
 
       {/* message thread */}
       <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-3xl space-y-4 px-4 py-6">
+        <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
           {messages.length === 0 && <EmptyState onSend={handleSend} />}
           {messages.map((msg) => (
             <MessageBubble
@@ -158,30 +164,54 @@ export default function ChatPage() {
 function EmptyState({ onSend }: { onSend: (q: string) => void }) {
   const suggestions = [
     "TOR นี้ควรเสนอ SKU ไหน",
-    "spec ของ product X คืออะไร",
     "ลาป่วยกี่วันต้องมีใบแพทย์",
+    "spec ของสินค้า X คืออะไร",
+    "วิธีเบิกค่าเดินทางทำอย่างไร",
   ];
+
   return (
-    <div className="flex flex-col items-center gap-4 py-20 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 text-2xl">
-        💬
+    <div className="flex flex-col items-center gap-6 py-20 text-center animate-fadein">
+      {/* icon */}
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 shadow-lg shadow-blue-200">
+        <svg
+          className="h-8 w-8 text-white"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
       </div>
+
+      {/* headline */}
       <div>
-        <p className="text-base font-semibold text-gray-800">ถามอะไรได้เลย</p>
-        <p className="mt-1 max-w-xs text-sm text-gray-400">
-          ระบบจะตอบจากเอกสารขององค์กรคุณ พร้อมอ้างอิงแหล่งที่มา
+        <p className="text-lg font-bold text-gray-900">ถามอะไรก็ได้</p>
+        <p className="mt-1.5 max-w-xs text-sm leading-relaxed text-gray-500">
+          ระบบจะค้นหาและตอบจากเอกสารองค์กรคุณ
+          <br />
+          พร้อมอ้างอิงแหล่งที่มาทุกครั้ง
         </p>
       </div>
-      <div className="mt-1 flex flex-wrap justify-center gap-2">
-        {suggestions.map((q) => (
-          <button
-            key={q}
-            onClick={() => onSend(q)}
-            className="rounded-full border border-gray-200 bg-white px-4 py-1.5 text-xs text-gray-600 shadow-sm transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
-          >
-            {q}
-          </button>
-        ))}
+
+      {/* suggestion chips */}
+      <div>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
+          ลองถามเช่น
+        </p>
+        <div className="flex flex-wrap justify-center gap-2">
+          {suggestions.map((q) => (
+            <button
+              key={q}
+              onClick={() => onSend(q)}
+              className="rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-600 shadow-sm transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 hover:shadow-md active:scale-[0.97]"
+            >
+              {q}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -189,13 +219,17 @@ function EmptyState({ onSend }: { onSend: (q: string) => void }) {
 
 function TypingIndicator() {
   return (
-    <div className="flex justify-start">
+    <div className="flex items-start gap-2.5 justify-start animate-fadein">
+      {/* AI avatar */}
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-xs font-bold text-white shadow-sm">
+        K
+      </span>
       <div className="rounded-2xl rounded-tl-sm bg-white px-4 py-3 shadow-sm ring-1 ring-gray-200">
-        <div className="flex gap-1">
-          {[0, 150, 300].map((delay) => (
+        <div className="flex items-center gap-1.5">
+          {[0, 200, 400].map((delay) => (
             <span
               key={delay}
-              className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+              className="dot-bounce h-2 w-2 rounded-full bg-blue-400"
               style={{ animationDelay: `${delay}ms` }}
             />
           ))}

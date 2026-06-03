@@ -16,3 +16,43 @@ body {
   color: var(--foreground);
   /* font-family มาจาก font-sans class ใน layout.tsx → var(--font-sarabun) */
 }
+
+/* ─── Scrollbar ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* ─── Text selection ────────────────────────────────────────────────────────── */
+::selection {
+  background: #bfdbfe;
+  color: #1e40af;
+}
+
+/* ─── Smooth page entry ─────────────────────────────────────────────────────── */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fadein {
+  animation: fadeSlideIn 0.2s ease-out both;
+}
+
+/* ─── Typing dot bounce ──────────────────────────────────────────────────────── */
+@keyframes dotBounce {
+  0%, 60%, 100% { transform: translateY(0);    opacity: 0.4; }
+  30%            { transform: translateY(-5px); opacity: 1;   }
+}
+.dot-bounce {
+  animation: dotBounce 1.3s infinite ease-in-out;
+}
