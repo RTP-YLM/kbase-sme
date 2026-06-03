@@ -6,11 +6,27 @@ import { MessageBubble, type Message } from "@/components/chat/MessageBubble";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { useAuth } from "@/store/auth";
 
+const DEPT_LABELS: Record<string, string> = {
+  hr: "HR",
+  accounting: "บัญชี",
+  finance: "การเงิน",
+  sales: "ขาย",
+  operations: "ปฏิบัติการ",
+  legal: "กฎหมาย",
+  general: "ทั่วไป",
+};
+
 export default function ChatPage() {
   const { departments } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const [activeDept, setActiveDept] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // ตั้ง dept เริ่มต้น: null = ค้นทุก dept (ไม่ filter)
+  useEffect(() => {
+    setActiveDept(null);
+  }, [departments]);
 
   // scroll to bottom เมื่อมี message ใหม่
   useEffect(() => {
@@ -18,7 +34,6 @@ export default function ChatPage() {
   }, [messages]);
 
   async function handleSend(question: string) {
-    // เพิ่ม user bubble ทันที
     const userMsg: Message = {
       id: crypto.randomUUID(),
       role: "user",
@@ -33,7 +48,7 @@ export default function ChatPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question,
-          department: departments[0] ?? null, // D1: ส่ง department จาก token
+          department: activeDept ?? undefined, // null = ค้นทุก dept
         }),
       });
 
@@ -75,19 +90,49 @@ export default function ChatPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question: msg.content, feedback: sentiment }),
-    }).catch(() => {}); // fire-and-forget
+    }).catch(() => {});
   }
 
   return (
     <div className="flex h-screen flex-col">
       <Navbar />
 
+      {/* department selector — แสดงเฉพาะถ้ามี dept > 1 */}
+      {departments.length > 1 && (
+        <div className="border-b border-gray-100 bg-white px-4 py-2">
+          <div className="mx-auto flex max-w-3xl items-center gap-2 overflow-x-auto">
+            <span className="shrink-0 text-xs text-gray-400">ค้นใน:</span>
+            <button
+              onClick={() => setActiveDept(null)}
+              className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                activeDept === null
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              ทุกแผนก
+            </button>
+            {departments.map((d) => (
+              <button
+                key={d}
+                onClick={() => setActiveDept(d === activeDept ? null : d)}
+                className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  activeDept === d
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {DEPT_LABELS[d] ?? d}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* message thread */}
       <main className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-3xl space-y-4 px-4 py-6">
-          {messages.length === 0 && (
-            <EmptyState />
-          )}
+          {messages.length === 0 && <EmptyState />}
           {messages.map((msg) => (
             <MessageBubble
               key={msg.id}

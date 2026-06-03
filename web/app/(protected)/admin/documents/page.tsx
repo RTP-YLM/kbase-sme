@@ -17,8 +17,13 @@ interface DocumentInfo {
 }
 
 const DEPT_LABELS: Record<string, string> = {
-  hr: "HR", accounting: "บัญชี", sales: "ขาย",
-  operations: "Operations", legal: "กฎหมาย", general: "ทั่วไป",
+  hr: "HR",
+  accounting: "บัญชี",
+  finance: "การเงิน",
+  sales: "ขาย",
+  operations: "Operations",
+  legal: "กฎหมาย",
+  general: "ทั่วไป",
 };
 
 export default function AdminDocumentsPage() {
@@ -26,6 +31,7 @@ export default function AdminDocumentsPage() {
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [reindexingId, setReindexingId] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
 
   const fetchDocs = useCallback(async () => {
@@ -41,6 +47,21 @@ export default function AdminDocumentsPage() {
     await fetch(`/api/proxy/api/documents/${id}`, { method: "DELETE" });
     setDeleteId(null);
     fetchDocs();
+  }
+
+  async function handleReindex(id: string) {
+    setReindexingId(id);
+    try {
+      const res = await fetch(`/api/proxy/api/documents/${id}/reindex`, {
+        method: "POST",
+      });
+      if (!res.ok) throw new Error("reindex failed");
+      // รอสักครู่แล้ว refresh (job async)
+      await new Promise((r) => setTimeout(r, 1500));
+      fetchDocs();
+    } finally {
+      setReindexingId(null);
+    }
   }
 
   const filtered = filter
@@ -66,8 +87,8 @@ export default function AdminDocumentsPage() {
               </button>
             </div>
 
-            {/* filter */}
-            <div className="mb-4 flex gap-2 flex-wrap">
+            {/* filter tabs */}
+            <div className="mb-4 flex flex-wrap gap-2">
               {["", "hr", "accounting", "sales", "operations", "legal", "general"].map((d) => (
                 <button
                   key={d}
@@ -100,7 +121,7 @@ export default function AdminDocumentsPage() {
                       <th className="px-4 py-3 font-medium">ชิ้น</th>
                       <th className="px-4 py-3 font-medium">สถานะ</th>
                       <th className="px-4 py-3 font-medium">วันที่</th>
-                      <th className="px-4 py-3" />
+                      <th className="px-4 py-3 font-medium text-right">จัดการ</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -128,12 +149,22 @@ export default function AdminDocumentsPage() {
                           {new Date(doc.created_at).toLocaleDateString("th-TH")}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <button
-                            onClick={() => setDeleteId(doc.id)}
-                            className="text-xs text-red-500 hover:text-red-700"
-                          >
-                            ลบ
-                          </button>
+                          <div className="flex items-center justify-end gap-3">
+                            <button
+                              onClick={() => handleReindex(doc.id)}
+                              disabled={reindexingId === doc.id}
+                              className="text-xs text-blue-500 hover:text-blue-700 disabled:opacity-40"
+                              title="Re-index เอกสารใหม่"
+                            >
+                              {reindexingId === doc.id ? "กำลัง…" : "re-index"}
+                            </button>
+                            <button
+                              onClick={() => setDeleteId(doc.id)}
+                              className="text-xs text-red-500 hover:text-red-700"
+                            >
+                              ลบ
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -141,6 +172,15 @@ export default function AdminDocumentsPage() {
                 </table>
               )}
             </div>
+
+            {/* document count */}
+            {!loading && (
+              <p className="mt-3 text-right text-xs text-gray-400">
+                {filtered.length} เอกสาร
+                {filter ? ` ใน ${DEPT_LABELS[filter] ?? filter}` : ""}
+              </p>
+            )}
+
           </div>
         </main>
 
@@ -156,12 +196,21 @@ export default function AdminDocumentsPage() {
         {deleteId && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
             <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-              <p className="text-sm text-gray-800">ต้องการลบเอกสารนี้ใช่ไหม? การกระทำนี้ไม่สามารถย้อนกลับได้</p>
+              <p className="font-medium text-gray-900">ลบเอกสาร?</p>
+              <p className="mt-1 text-sm text-gray-500">
+                การกระทำนี้ไม่สามารถย้อนกลับได้ chunk ทั้งหมดจะถูกลบออกจากระบบ
+              </p>
               <div className="mt-4 flex justify-end gap-2">
-                <button onClick={() => setDeleteId(null)} className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                <button
+                  onClick={() => setDeleteId(null)}
+                  className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+                >
                   ยกเลิก
                 </button>
-                <button onClick={() => handleDelete(deleteId)} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">
+                <button
+                  onClick={() => handleDelete(deleteId)}
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                >
                   ลบ
                 </button>
               </div>
