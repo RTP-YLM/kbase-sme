@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Navbar } from "@/components/Navbar";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { UploadModal } from "@/components/admin/UploadModal";
+import { UploadPanel } from "@/components/admin/UploadPanel";
+import { JobToast, type JobItem } from "@/components/admin/JobToast";
 
 interface DocumentInfo {
   id: string;
@@ -30,10 +31,14 @@ export default function AdminDocumentsPage() {
   const [docs, setDocs] = useState<DocumentInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [reindexingId, setReindexingId] = useState<string | null>(null);
   const [reindexError, setReindexError] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
+
+  // async job toasts
+  const [jobs, setJobs] = useState<JobItem[]>([]);
 
   const fetchDocs = useCallback(async () => {
     setLoading(true);
@@ -44,19 +49,82 @@ export default function AdminDocumentsPage() {
 
   useEffect(() => { fetchDocs(); }, [fetchDocs]);
 
+  // ─── upload ─────────────────────────────────────────────────────────────────
+  async function handleUpload(file: File, department: string, accessLevel: number) {
+    setSubmitting(true);
+
+    const form = new FormData();
+    form.append("file", file);
+    form.append("department", department);
+    form.append("access_level", String(accessLevel));
+
+    const res = await fetch("/api/proxy/api/documents", { method: "POST", body: form });
+    setSubmitting(false);
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      // show error toast immediately with a temp id
+      const tempId = crypto.randomUUID();
+      addJob({ id: tempId, filename: file.name, status: "failed", error: err.detail ?? "upload ล้มเหลว" });
+      return;
+    }
+
+    const data = await res.json();
+
+    // close panel → show toast
+    setShowUpload(false);
+    addJob({ id: data.job_id, filename: file.name, status: "queued" });
+    pollJob(data.job_id);
+  }
+
+  function addJob(job: JobItem) {
+    setJobs((prev) => [job, ...prev]);
+  }
+
+  function updateJob(id: string, patch: Partial<JobItem>) {
+    setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, ...patch } : j)));
+  }
+
+  function dismissJob(id: string) {
+    setJobs((prev) => prev.filter((j) => j.id !== id));
+  }
+
+  function pollJob(jobId: string) {
+    const interval = setInterval(async () => {
+      const res = await fetch(`/api/proxy/api/documents/jobs/${jobId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      updateJob(jobId, {
+        status: data.status,
+        chunks: data.chunks,
+        error: data.error,
+      });
+
+      if (data.status === "done" || data.status === "failed") {
+        clearInterval(interval);
+        if (data.status === "done") {
+          fetchDocs();
+          // auto-dismiss success toast after 5 s
+          setTimeout(() => dismissJob(jobId), 5000);
+        }
+      }
+    }, 2000);
+  }
+
+  // ─── delete ──────────────────────────────────────────────────────────────────
   async function handleDelete(id: string) {
     await fetch(`/api/proxy/api/documents/${id}`, { method: "DELETE" });
     setDeleteId(null);
     fetchDocs();
   }
 
+  // ─── reindex ─────────────────────────────────────────────────────────────────
   async function handleReindex(id: string) {
     setReindexingId(id);
     setReindexError(null);
     try {
-      const res = await fetch(`/api/proxy/api/documents/${id}/reindex`, {
-        method: "POST",
-      });
+      const res = await fetch(`/api/proxy/api/documents/${id}/reindex`, { method: "POST" });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         setReindexError(err.detail ?? `re-index ล้มเหลว (${res.status})`);
@@ -71,9 +139,7 @@ export default function AdminDocumentsPage() {
     }
   }
 
-  const filtered = filter
-    ? docs.filter((d) => d.department === filter)
-    : docs;
+  const filtered = filter ? docs.filter((d) => d.department === filter) : docs;
 
   return (
     <AuthGuard require="admin">
@@ -84,15 +150,28 @@ export default function AdminDocumentsPage() {
           <div className="mx-auto max-w-5xl px-4 py-6">
 
             {/* header */}
-            <div className="mb-6 flex items-center justify-between">
+            <div className="mb-4 flex items-center justify-between">
               <h1 className="text-lg font-semibold text-gray-900">เอกสารทั้งหมด</h1>
               <button
-                onClick={() => setShowUpload(true)}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                onClick={() => setShowUpload((v) => !v)}
+                className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                  showUpload
+                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
               >
-                + อัปโหลด
+                {showUpload ? "✕ ปิด" : "+ อัปโหลด"}
               </button>
             </div>
+
+            {/* inline upload panel */}
+            {showUpload && (
+              <UploadPanel
+                onClose={() => setShowUpload(false)}
+                onSubmit={handleUpload}
+                submitting={submitting}
+              />
+            )}
 
             {/* filter tabs */}
             <div className="mb-4 flex flex-wrap gap-2">
@@ -188,7 +267,7 @@ export default function AdminDocumentsPage() {
               </p>
             )}
 
-            {/* reindex error toast */}
+            {/* reindex error */}
             {reindexError && (
               <div className="mt-3 flex items-center justify-between rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700 ring-1 ring-red-200">
                 <span>⚠️ {reindexError}</span>
@@ -199,13 +278,8 @@ export default function AdminDocumentsPage() {
           </div>
         </main>
 
-        {/* upload modal */}
-        {showUpload && (
-          <UploadModal
-            onClose={() => setShowUpload(false)}
-            onDone={fetchDocs}
-          />
-        )}
+        {/* floating job toasts */}
+        <JobToast jobs={jobs} onDismiss={dismissJob} />
 
         {/* delete confirmation */}
         {deleteId && (
