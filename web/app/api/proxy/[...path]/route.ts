@@ -2,9 +2,8 @@
  * Generic API proxy — ส่ง request ไป FastAPI พร้อมแนบ Authorization header
  * จาก httpOnly cookie kbase_token (client ไม่แตะ token โดยตรง)
  *
- * สำคัญ: multipart/form-data (upload) ต้องส่ง body เป็น ArrayBuffer
- * ไม่ใช่ text — ไม่งั้น binary (file bytes) เสียหาย
- * และต้องไม่ override Content-Type เพราะ boundary จะหาย
+ * multipart/form-data: ใช้ req.formData() แล้วส่งต่อเป็น FormData
+ * (ไม่ต้องจัดการ binary/boundary เอง — fetch() ทำให้)
  */
 import { NextRequest, NextResponse } from "next/server";
 
@@ -13,27 +12,29 @@ const API_URL = process.env.API_URL ?? "http://localhost:8000";
 async function proxy(req: NextRequest, path: string) {
   const token = req.cookies.get("kbase_token")?.value;
   const url = `${API_URL}/${path}${req.nextUrl.search}`;
-
   const contentType = req.headers.get("content-type") ?? "";
-  const isMultipart = contentType.includes("multipart/form-data");
 
-  // headers — inject Authorization, ส่ง Content-Type ผ่านตามต้นฉบับเสมอ
-  // multipart ต้องการ boundary ใน Content-Type ห้ามตัดออก
-  const headers: Record<string, string> = {};
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-  if (contentType) headers["Content-Type"] = contentType;
+  const authHeaders: Record<string, string> = {};
+  if (token) authHeaders["Authorization"] = `Bearer ${token}`;
 
-  // body — multipart ต้องเป็น ArrayBuffer ไม่ใช่ text
   let body: BodyInit | undefined;
+  let extraHeaders: Record<string, string> = {};
+
   if (req.method !== "GET" && req.method !== "HEAD") {
-    body = isMultipart
-      ? await req.arrayBuffer()   // binary-safe
-      : await req.text();          // JSON / plain text
+    if (contentType.includes("multipart/form-data")) {
+      // parse FormData แล้วส่งต่อ — fetch() จะ set Content-Type + boundary ใหม่ให้เอง
+      body = await req.formData();
+      // ไม่ต้อง set Content-Type (ห้าม set ไม่งั้น boundary หาย)
+    } else {
+      // JSON / plain text
+      body = await req.text();
+      if (contentType) extraHeaders["Content-Type"] = contentType;
+    }
   }
 
   const upstream = await fetch(url, {
     method: req.method,
-    headers,
+    headers: { ...authHeaders, ...extraHeaders },
     body,
   });
 

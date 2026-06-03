@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "52mb", // รองรับ upload สูงสุด 50MB (ตาม spec)
+    },
+  },
 };
 
 export default nextConfig;
