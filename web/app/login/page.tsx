@@ -55,24 +55,46 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-sm">
-
-        {/* Logo / header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-900">KbaseSME</h1>
-          <p className="mt-1 text-sm text-gray-500">ผู้ช่วย AI ความรู้องค์กร</p>
+    <div className="flex min-h-screen bg-gray-50">
+      {/* left panel — brand */}
+      <div className="hidden w-[420px] flex-col justify-between bg-blue-600 p-10 lg:flex">
+        <div className="flex items-center gap-2">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 text-sm font-bold text-white">K</span>
+          <span className="text-base font-bold text-white">KbaseSME</span>
         </div>
+        <div>
+          <p className="text-2xl font-bold leading-snug text-white">
+            ถามได้ทันที<br />ตอบจากเอกสารจริง
+          </p>
+          <p className="mt-3 text-sm text-blue-200">
+            ระบบ AI ถามตอบจากเอกสารองค์กร พร้อมอ้างอิงแหล่งที่มา
+          </p>
+          <div className="mt-8 space-y-2 text-sm text-blue-100">
+            {["ตอบจากเอกสารบริษัทคุณเท่านั้น", "อ้างอิงหน้าและหัวข้อทุกคำตอบ", "รองรับ LINE OA + Web"].map(f => (
+              <div key={f} className="flex items-center gap-2">
+                <span className="text-blue-300">✓</span> {f}
+              </div>
+            ))}
+          </div>
+        </div>
+        <p className="text-xs text-blue-300">KbaseSME © {new Date().getFullYear()}</p>
+      </div>
 
-        {/* Card */}
-        <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
-          <h2 className="mb-6 text-lg font-semibold text-gray-800">เข้าสู่ระบบ</h2>
+      {/* right panel — form */}
+      <div className="flex flex-1 items-center justify-center px-6 py-12">
+        <div className="w-full max-w-sm">
+          {/* mobile logo */}
+          <div className="mb-8 flex items-center gap-2 lg:hidden">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white">K</span>
+            <span className="text-base font-bold text-gray-900">KbaseSME</span>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <h1 className="text-xl font-bold text-gray-900">เข้าสู่ระบบ</h1>
+          <p className="mt-1 text-sm text-gray-500">ยินดีต้อนรับกลับ</p>
+
+          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                อีเมล
-              </label>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">อีเมล</label>
               <input
                 type="email"
                 value={email}
@@ -80,14 +102,12 @@ export default function LoginPage() {
                 required
                 autoComplete="email"
                 placeholder="name@company.com"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                รหัสผ่าน
-              </label>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">รหัสผ่าน</label>
               <input
                 type="password"
                 value={password}
@@ -95,30 +115,25 @@ export default function LoginPage() {
                 required
                 autoComplete="current-password"
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
             </div>
 
-            {/* Error message */}
             {error && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
-                {error}
-              </p>
+              <div className="flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2.5 text-sm text-red-700 ring-1 ring-red-200">
+                <span>⚠️</span> {error}
+              </div>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/40 disabled:opacity-60"
+              className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/40 disabled:opacity-60"
             >
               {loading ? "กำลังเข้าสู่ระบบ…" : "เข้าสู่ระบบ"}
             </button>
           </form>
         </div>
-
-        <p className="mt-6 text-center text-xs text-gray-400">
-          KbaseSME © {new Date().getFullYear()}
-        </p>
       </div>
     </div>
   );

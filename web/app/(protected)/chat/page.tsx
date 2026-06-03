@@ -95,19 +95,19 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex h-screen flex-col bg-gray-50">
       <Navbar />
 
       {/* department selector — แสดงเฉพาะถ้ามี dept > 1 */}
       {departments.length > 1 && (
-        <div className="border-b border-gray-100 bg-white px-4 py-2">
+        <div className="border-b border-gray-200 bg-white px-4 py-2 shadow-sm">
           <div className="mx-auto flex max-w-3xl items-center gap-2 overflow-x-auto">
-            <span className="shrink-0 text-xs text-gray-400">ค้นใน:</span>
+            <span className="shrink-0 text-xs font-medium text-gray-400">ค้นใน:</span>
             <button
               onClick={() => setActiveDept(null)}
-              className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-all ${
                 activeDept === null
-                  ? "bg-blue-600 text-white"
+                  ? "bg-blue-600 text-white shadow-sm"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
@@ -117,9 +117,9 @@ export default function ChatPage() {
               <button
                 key={d}
                 onClick={() => setActiveDept(d === activeDept ? null : d)}
-                className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-all ${
                   activeDept === d
-                    ? "bg-blue-600 text-white"
+                    ? "bg-blue-600 text-white shadow-sm"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
@@ -133,7 +133,7 @@ export default function ChatPage() {
       {/* message thread */}
       <main className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-3xl space-y-4 px-4 py-6">
-          {messages.length === 0 && <EmptyState />}
+          {messages.length === 0 && <EmptyState onSend={handleSend} />}
           {messages.map((msg) => (
             <MessageBubble
               key={msg.id}
@@ -155,26 +155,32 @@ export default function ChatPage() {
   );
 }
 
-function EmptyState() {
+function EmptyState({ onSend }: { onSend: (q: string) => void }) {
+  const suggestions = [
+    "TOR นี้ควรเสนอ SKU ไหน",
+    "spec ของ product X คืออะไร",
+    "ลาป่วยกี่วันต้องมีใบแพทย์",
+  ];
   return (
-    <div className="flex flex-col items-center gap-3 py-16 text-center">
-      <div className="text-4xl">💬</div>
-      <p className="text-base font-medium text-gray-700">ถามอะไรได้เลย</p>
-      <p className="max-w-xs text-sm text-gray-400">
-        ระบบจะตอบจากเอกสารขององค์กรคุณ พร้อมอ้างอิงแหล่งที่มา
-      </p>
-      <div className="mt-2 flex flex-wrap justify-center gap-2">
-        {[
-          "TOR นี้ควรเสนอ SKU ไหน",
-          "spec ของ product X คืออะไร",
-          "ลาป่วยกี่วันต้องมีใบแพทย์",
-        ].map((q) => (
-          <span
+    <div className="flex flex-col items-center gap-4 py-20 text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 text-2xl">
+        💬
+      </div>
+      <div>
+        <p className="text-base font-semibold text-gray-800">ถามอะไรได้เลย</p>
+        <p className="mt-1 max-w-xs text-sm text-gray-400">
+          ระบบจะตอบจากเอกสารขององค์กรคุณ พร้อมอ้างอิงแหล่งที่มา
+        </p>
+      </div>
+      <div className="mt-1 flex flex-wrap justify-center gap-2">
+        {suggestions.map((q) => (
+          <button
             key={q}
-            className="cursor-default rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-500"
+            onClick={() => onSend(q)}
+            className="rounded-full border border-gray-200 bg-white px-4 py-1.5 text-xs text-gray-600 shadow-sm transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
           >
             {q}
-          </span>
+          </button>
         ))}
       </div>
     </div>

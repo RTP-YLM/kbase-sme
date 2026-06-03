@@ -22,32 +22,35 @@ export function SourceCitation({ sources }: Props) {
 
   return (
     <div className="mt-2">
-      {/* inline citation — differentiator ตาม MOM bizdev */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-xs text-blue-700 hover:bg-blue-100"
+        className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100"
       >
-        <span>📄</span>
-        <span>
-          อ้างอิง: {top.section ?? "เอกสาร"}
-          {top.page ? ` หน้า ${top.page}` : ""}
-        </span>
-        <span>{open ? "▲" : "▼"}</span>
+        <span className="text-blue-500">📄</span>
+        <span>อ้างอิง: {top.section ?? "เอกสาร"}{top.page ? ` หน้า ${top.page}` : ""}</span>
+        <span className="text-blue-400">{open ? "▲" : "▼"}</span>
       </button>
 
       {open && (
-        <ul className="mt-1.5 space-y-1 rounded-lg border border-blue-100 bg-blue-50 p-2">
-          {sources.map((s, i) => (
-            <li key={s.source_id + i} className="text-xs text-blue-800">
-              <span className="font-medium">[{i + 1}]</span>{" "}
-              {s.section ?? "—"}
-              {s.page ? ` · หน้า ${s.page}` : ""}
-              <span className="ml-2 text-blue-400">
-                score {(s.score * 100).toFixed(0)}%
-              </span>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-2 rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400">แหล่งอ้างอิง</p>
+          <ul className="space-y-1.5">
+            {sources.map((s, i) => (
+              <li key={s.source_id + i} className="flex items-start gap-2 text-xs">
+                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded bg-blue-100 text-[10px] font-bold text-blue-700">
+                  {i + 1}
+                </span>
+                <span className="text-gray-700">
+                  {s.section ?? "—"}
+                  {s.page ? <span className="text-gray-400"> · หน้า {s.page}</span> : null}
+                </span>
+                <span className="ml-auto shrink-0 text-[10px] text-gray-400">
+                  {(s.score * 100).toFixed(0)}%
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );
