@@ -48,7 +48,7 @@ async def query(
         question=req.question,
         tenant_id=user.tenant_id,
         user_id=user.user_id,
-        department=req.department or (user.departments[0] if user.departments else None),
+        department=req.department or None,  # None = ค้นทุก dept (ไม่ lock dept แรก)
         access_level=2 if user.role == "user" else 9,
     )
 
@@ -70,10 +70,20 @@ async def feedback(
 
     store = SupabaseVectorStore()
     store._ensure_client()
-    store._client.table("rag_query_logs").update(
-        {"feedback": req.feedback}
-    ).eq("tenant_id", user.tenant_id).eq("question", req.question).order(
-        "created_at", desc=True
-    ).limit(1).execute()
+
+    # หา id ของ log ล่าสุดก่อน แล้วค่อย update (Supabase ไม่รองรับ order+limit ใน update chain)
+    row = (
+        store._client.table("rag_query_logs")
+        .select("id")
+        .eq("tenant_id", user.tenant_id)
+        .eq("question", req.question)
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+    if row.data:
+        store._client.table("rag_query_logs").update(
+            {"feedback": req.feedback}
+        ).eq("id", row.data[0]["id"]).execute()
 
     return {"status": "ok"}
